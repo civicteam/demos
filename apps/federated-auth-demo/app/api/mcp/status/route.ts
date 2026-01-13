@@ -7,6 +7,7 @@ export interface McpStatusResponse {
   tokenExchange: {
     status: "success" | "failed" | "pending";
     error?: string;
+    accessToken?: string;
   };
   mcp: {
     connected: boolean;
@@ -48,7 +49,7 @@ export async function GET(): Promise<Response> {
 
     try {
       const civicToken = await exchangeTokenForCivic(sessionToken);
-      status.tokenExchange = { status: "success" };
+      status.tokenExchange = { status: "success", accessToken: civicToken.accessToken };
 
       // Try to connect to MCP
       const mcpServerUrl = process.env.MCP_SERVER_URL;

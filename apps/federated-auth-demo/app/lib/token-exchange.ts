@@ -37,7 +37,7 @@ export async function exchangeTokenForCivic(subjectToken: string): Promise<Token
   const body = new URLSearchParams({
     grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
     subject_token: subjectToken,
-    scope: "openid",
+  scope: "openid profile email",
   });
 
   logger.debug("Exchanging JWT for Civic access token");

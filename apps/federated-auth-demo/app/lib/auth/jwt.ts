@@ -2,7 +2,7 @@ import * as jose from "jose";
 import type { JWT, JWTEncodeParams, JWTDecodeParams } from "next-auth/jwt";
 import { getPrivateKey, getPublicKey } from "./keys";
 
-const ISSUER = "https://localhost:3006";
+const ISSUER = "https://localhost:3000";
 const AUDIENCE = "civic-mcp";
 
 export async function encodeJwt(params: JWTEncodeParams): Promise<string> {
@@ -21,6 +21,7 @@ export async function encodeJwt(params: JWTEncodeParams): Promise<string> {
     exp: now + (maxAge ?? 24 * 60 * 60),
     iss: ISSUER,
     aud: AUDIENCE,
+    scope: "openid profile email",
   })
     .setProtectedHeader({ alg: "RS256", typ: "JWT" })
     .sign(privateKey);

@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3006",
-    "dev:e2e": "dotenv -e .env.e2e.test -- next dev --turbopack --port 3006",
+    "dev": "next dev --turbopack --port 3000",
+    "dev:e2e": "dotenv -e .env.e2e.test -- next dev --turbopack --port 3000",
     "build": "next build --turbo",
-    "start": "next start --port 3006",
+    "start": "next start --port 3000",
     "lint": "eslint .",
     "check-types": "tsc --noEmit"
   },
