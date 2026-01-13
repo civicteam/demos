@@ -1,0 +1,13 @@
+{
+  "name": "nexus-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter federated-auth-demo dev",
+    "build": "pnpm --filter federated-auth-demo build",
+    "check-types": "pnpm -r check-types",
+    "lint": "pnpm -r lint"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
