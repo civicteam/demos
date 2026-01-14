@@ -1,15 +1,13 @@
 # Federated Auth Demo
 
-This demo application shows how to integrate a custom authentication system with Civic MCP Hub using OAuth 2.0 Token Exchange (RFC 8693). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
+This demo application shows how to integrate a custom authentication system with Civic Nexus using OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
 
-## Overview
-
-The federated authentication flow works as follows:
+## How It Works
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic MCP     │
-│   (Auth.js)     │     │   (JWT Issuer)  │     │   (Exchange)    │     │   Hub           │
+│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic Nexus   │
+│   (Auth.js)     │     │   (JWT Issuer)  │     │   (Exchange)    │     │   (MCP Hub)     │
 └────────┬────────┘     └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
          │                       │                       │                       │
          │  1. User Login        │                       │                       │
@@ -33,369 +31,195 @@ The federated authentication flow works as follows:
          │<──────────────────────────────────────────────────────────────────────│
 ```
 
-## Prerequisites
+## Setup Guide
 
-1. **Civic Auth Client**: You need a Civic Auth client ID and secret configured for token exchange
-2. **RSA Key Pair**: Generate an RSA key pair for signing your JWTs
-3. **Civic MCP Account**: An organizational account in Civic MCP associated with your client ID
+### Step 1: Create a Civic Auth Application
 
-## Implementation Guide
+1. Go to [auth.civic.com](https://auth.civic.com) and sign up or log in
+2. Create a new application to get your **Client ID** and **Client Secret**
+3. See the [Civic Auth documentation](https://docs.civic.com/auth) for detailed instructions
 
-### Step 1: Generate RSA Keys
+### Step 2: Configure Token Exchange in Civic Auth
 
-Generate an RSA key pair for signing your JWTs:
+In your Civic Auth application settings, configure the Token Exchange feature:
 
-```bash
-# Using the provided script
-pnpm tsx scripts/generate-keys.ts
-```
-
-Or generate manually with OpenSSL:
-
-```bash
-# Generate private key
-openssl genrsa -out private.pem 2048
-
-# Extract public key
-openssl rsa -in private.pem -pubout -out public.pem
-```
-
-Add the keys to your `.env` file (escape newlines):
-
-```env
-JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIIBI...\n-----END PUBLIC KEY-----"
-JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----"
-```
-
-### Step 2: Configure Auth.js with Custom JWT Signing
-
-Create a custom JWT encoder that signs tokens with your RSA private key:
-
-```typescript
-// app/lib/auth/jwt.ts
-import * as jose from "jose";
-import type { JWT, JWTEncodeParams, JWTDecodeParams } from "next-auth/jwt";
-
-const ISSUER = "https://your-app.example.com"; // Your app's URL
-const AUDIENCE = "civic-mcp";
-
-export async function encodeJwt(params: JWTEncodeParams): Promise<string> {
-  const { token, maxAge } = params;
-
-  if (!token) {
-    throw new Error("Token is required for encoding");
-  }
-
-  const privateKey = await getPrivateKey(); // Load from env
-  const now = Math.floor(Date.now() / 1000);
-
-  const jwt = await new jose.SignJWT({
-    ...token,
-    iat: now,
-    exp: now + (maxAge ?? 24 * 60 * 60),
-    iss: ISSUER,
-    aud: AUDIENCE,
-  })
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .sign(privateKey);
-
-  return jwt;
-}
-
-export async function decodeJwt(params: JWTDecodeParams): Promise<JWT | null> {
-  const { token } = params;
-
-  if (!token) return null;
-
-  try {
-    const publicKey = await getPublicKey();
-    const { payload } = await jose.jwtVerify(token, publicKey, {
-      issuer: ISSUER,
-      audience: AUDIENCE,
-    });
-    return payload as JWT;
-  } catch (error) {
-    console.error("JWT decode error:", error);
-    return null;
-  }
-}
-```
-
-Configure Auth.js to use your custom JWT functions:
-
-```typescript
-// auth.ts
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { encodeJwt, decodeJwt } from "./app/lib/auth/jwt";
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        // Your authentication logic here
-        const user = await validateUser(credentials.email, credentials.password);
-        if (!user) return null;
-        return { id: user.id, email: user.email, name: user.name };
-      },
-    }),
-  ],
-  session: { strategy: "jwt" },
-  jwt: {
-    encode: encodeJwt,
-    decode: decodeJwt,
-  },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
-});
-```
-
-### Step 3: Expose Your Public Key
-
-Create endpoints to expose your public key for Civic Auth to verify your JWTs:
-
-**JWKS Endpoint** (`/api/keys/.well-known/jwks.json`):
-
-```typescript
-import * as jose from "jose";
-import { getPublicKey } from "@/lib/auth/keys";
-
-export async function GET() {
-  const publicKey = await getPublicKey();
-  const jwk = await jose.exportJWK(publicKey);
-
-  return Response.json({
-    keys: [{
-      ...jwk,
-      kid: "your-key-id",
-      use: "sig",
-      alg: "RS256",
-    }],
-  });
-}
-```
-
-**PEM Endpoint** (`/api/keys/public`):
-
-```typescript
-export async function GET() {
-  const publicKeyPem = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, "\n");
-  return new Response(publicKeyPem, {
-    headers: { "Content-Type": "application/x-pem-file" },
-  });
-}
-```
-
-### Step 4: Implement Token Exchange
-
-Create a service to exchange your JWT for a Civic access token:
-
-```typescript
-// app/lib/token-exchange.ts
-
-interface TokenExchangeResponse {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-  expiresAt: Date;
-}
-
-export async function exchangeTokenForCivic(subjectToken: string): Promise<TokenExchangeResponse> {
-  const clientId = process.env.CIVIC_AUTH_CLIENT_ID!;
-  const clientSecret = process.env.CIVIC_AUTH_CLIENT_SECRET!;
-  const civicAuthUrl = process.env.CIVIC_AUTH_URL || "https://auth.civic.com/oauth";
-
-  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-
-  const body = new URLSearchParams({
-    grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
-    subject_token: subjectToken,
-    scope: "openid",
-  });
-
-  const response = await fetch(`${civicAuthUrl}/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${basicAuth}`,
-    },
-    body: body.toString(),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  return {
-    accessToken: data.access_token,
-    tokenType: data.token_type,
-    expiresIn: data.expires_in,
-    expiresAt: new Date(Date.now() + data.expires_in * 1000),
-  };
-}
-```
-
-### Step 5: Create MCP Client with Token Exchange
-
-Create an MCP client that uses the exchanged Civic token:
-
-```typescript
-// app/lib/ai/mcp.ts
-import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
-
-export async function getMcpClient(sessionToken: string) {
-  // Exchange your JWT for a Civic token
-  const civicToken = await exchangeTokenForCivic(sessionToken);
-
-  // Create MCP transport with Civic token
-  const transport = new StreamableHTTPClientTransport(
-    new URL(process.env.MCP_SERVER_URL!),
-    {
-      requestInit: {
-        headers: {
-          Authorization: `Bearer ${civicToken.accessToken}`,
-          "x-civic-profile": "default", // Required for END_USER access
-        },
-      },
-    }
-  );
-
-  return createMCPClient({ name: "your-app", transport });
-}
-```
-
-### Step 6: Configure Civic Auth Dashboard
-
-In the Civic Auth dashboard, configure your federated token exchange provider:
+1. Navigate to the **Token Exchange** section
+2. Add a new token exchange provider with your app's details:
 
 | Field | Value |
 |-------|-------|
-| **Issuer** | `https://your-app.example.com` (must match JWT `iss` claim) |
-| **Audience** | `civic-mcp` (must match JWT `aud` claim) |
-| **JWKS URL** | `https://your-app.example.com/api/keys/.well-known/jwks.json` |
+| **Issuer** | Your app's URL (e.g., `https://your-app.example.com`) |
+| **Audience** | `civic-mcp` |
 | **Algorithm** | `RS256` |
 
-Alternatively, provide the PEM public key directly instead of JWKS URL.
+3. Provide your public key using one of these methods:
+   - **JWKS URL**: `https://your-app.example.com/api/keys/.well-known/jwks.json`
+   - **PEM**: Paste your public key directly
 
-### Step 7: Create Civic MCP Account
+> **Note**: The issuer and audience must match exactly what your app includes in its JWT claims.
 
-Ensure you have an organizational account in Civic MCP associated with your client ID. This account determines which MCP servers/tools your users can access.
+### Step 3: Create a Civic Nexus Organization
+
+1. Go to [nexus.civic.com](https://nexus.civic.com) and log in
+2. Create a new organization dedicated to your application
+3. Note the **Account ID** of your new organization (you'll need this for the next step)
+
+### Step 4: Link Your Civic Auth Account to Nexus
+
+Contact a Civic representative with:
+- Your **Civic Auth Client ID**
+- Your **Nexus Organization Account ID**
+
+They will link your Civic Auth application to your Nexus organization and configure the necessary internal settings.
+
+### Step 5: Run the Demo
+
+1. Clone this repository and install dependencies:
+
+```bash
+pnpm install
+```
+
+2. Generate RSA keys for JWT signing:
+
+```bash
+pnpm tsx scripts/generate-keys.ts
+```
+
+3. Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+4. Start the development server:
+
+```bash
+pnpm dev
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) and log in with:
+   - Email: `demo@example.com`
+   - Password: `demo123`
+
+## Implementation Details
+
+### Token Exchange
+
+The token exchange follows [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) to swap your app's JWT for a Civic access token. See `app/lib/token-exchange.ts`:
+
+```typescript
+import { exchangeTokenForCivic } from "@/lib/token-exchange";
+
+// Exchange your app's JWT for a Civic access token
+const civicToken = await exchangeTokenForCivic(sessionToken);
+// Returns: { accessToken, tokenType, expiresIn, expiresAt }
+```
+
+The exchange makes a POST request to Civic Auth's `/token` endpoint:
+
+```
+POST https://auth.civic.com/oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic <base64(clientId:clientSecret)>
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&subject_token=<your-jwt>
+&scope=openid profile email
+```
+
+### Using @civic/nexus-client
+
+This demo uses `@civic/nexus-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+
+```typescript
+import { NexusClient } from "@civic/nexus-client";
+import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+
+// Create a Nexus client with the exchanged Civic token
+const client = new NexusClient({
+  url: process.env.MCP_SERVER_URL,
+  auth: {
+    token: civicToken.accessToken,
+  },
+  headers: {
+    "x-civic-profile": "default",  // Required for federated auth
+  },
+});
+
+// Get tools adapted for Vercel AI SDK
+const tools = await client.getTools(vercelAIAdapter());
+
+// Use with your AI model
+const result = await generateText({
+  model: yourModel,
+  tools,
+  prompt: "...",
+});
+
+// Clean up when done
+await client.close();
+```
+
+The `x-civic-profile` header is required for federated authentication to lock users to a specific profile within your Nexus organization.
+
+### Client Caching
+
+The demo caches `NexusClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
 
 ## Environment Variables
 
-```env
-# Auth.js
-NEXTAUTH_URL=https://your-app.example.com
-NEXTAUTH_SECRET=your-random-secret-min-32-chars
+| Variable | Description |
+|----------|-------------|
+| `NEXTAUTH_URL` | URL where your app runs |
+| `NEXTAUTH_SECRET` | Secret for encrypting cookies (generate with `openssl rand -base64 32`) |
+| `JWT_PUBLIC_KEY` | RSA public key for JWT verification |
+| `JWT_PRIVATE_KEY` | RSA private key for JWT signing |
+| `CIVIC_AUTH_URL` | Civic Auth endpoint (default: `https://auth.civic.com/oauth`) |
+| `CIVIC_AUTH_CLIENT_ID` | Your Civic Auth client ID |
+| `CIVIC_AUTH_CLIENT_SECRET` | Your Civic Auth client secret |
+| `MCP_SERVER_URL` | Civic Nexus MCP endpoint (default: `https://nexus.civic.com/mcp`) |
+| `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
+| `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
 
-# RSA Keys for JWT signing
-JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
-JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
-
-# Civic Auth for token exchange
-CIVIC_AUTH_URL=https://auth.civic.com/oauth
-CIVIC_AUTH_CLIENT_ID=your-civic-client-id
-CIVIC_AUTH_CLIENT_SECRET=your-civic-client-secret
-
-# MCP Hub
-MCP_SERVER_URL=https://mcp.civic.com/mcp
-```
-
-## JWT Claims
+## JWT Requirements
 
 Your JWT must include these claims:
 
-| Claim | Description | Example |
-|-------|-------------|---------|
-| `iss` | Issuer URL (your app) | `https://your-app.example.com` |
-| `aud` | Audience | `civic-mcp` |
-| `sub` | Subject (user ID) | `user-123` |
-| `iat` | Issued at (Unix timestamp) | `1704067200` |
-| `exp` | Expiration (Unix timestamp) | `1704153600` |
-| `email` | User's email (optional) | `user@example.com` |
-| `name` | User's name (optional) | `John Doe` |
+| Claim | Required | Description |
+|-------|----------|-------------|
+| `iss` | Yes | Issuer URL (must match Civic Auth config) |
+| `aud` | Yes | Audience (must be `civic-mcp`) |
+| `sub` | Yes | Subject (user ID) |
+| `iat` | Yes | Issued at timestamp |
+| `exp` | Yes | Expiration timestamp |
+| `email` | No | User's email address |
+| `name` | No | User's display name |
 
-## Security Considerations
+## Project Structure
 
-1. **Key Security**: Never expose your private key. Store it securely in environment variables or a secrets manager.
-
-2. **Token Expiration**: Set reasonable expiration times for your JWTs (e.g., 24 hours).
-
-3. **HTTPS Only**: Always use HTTPS in production for all endpoints.
-
-4. **Client Credentials**: Store Civic Auth client credentials securely.
-
-5. **Profile Locking**: Use `x-civic-profile` header to lock users to a specific profile, preventing unauthorized profile switching.
+| File | Purpose |
+|------|---------|
+| `auth.ts` | Auth.js configuration with custom JWT signing |
+| `app/lib/auth/jwt.ts` | JWT encode/decode with RS256 |
+| `app/lib/auth/keys.ts` | RSA key management |
+| `app/lib/token-exchange.ts` | Civic token exchange service |
+| `app/lib/ai/mcp.ts` | MCP client setup |
+| `app/api/keys/.well-known/jwks.json/route.ts` | JWKS endpoint |
+| `app/api/keys/public/route.ts` | PEM public key endpoint |
+| `scripts/generate-keys.ts` | RSA key pair generator |
 
 ## Troubleshooting
 
 ### Token Exchange Fails with `invalid_grant`
 
 - Verify your issuer URL matches exactly what's configured in Civic Auth
-- Check that your JWKS endpoint is accessible from the internet
+- Check that your JWKS endpoint is publicly accessible
 - Ensure the JWT is signed with the correct private key
-- Verify the `aud` claim matches the expected audience
+- Verify the `aud` claim is set to `civic-mcp`
 
 ### MCP Connection Fails with 401
 
-- Ensure your Civic MCP account exists and is associated with your client ID
-- Check that the account has the required servers installed
-- Verify the `x-civic-profile` header is set for END_USER access
-
-### END_USER Role Cannot Unlock Profiles
-
-- Always include `x-civic-profile: "default"` header in MCP requests
-- This locks the user to a specific profile, which is required for END_USER role
-
-## Running the Demo
-
-```bash
-# Install dependencies
-pnpm install
-
-# Generate RSA keys (if not already done)
-pnpm tsx scripts/generate-keys.ts
-
-# Start the development server
-pnpm dev
-```
-
-The demo runs at http://localhost:3006. Login with:
-- Email: `demo@example.com`
-- Password: `demo123`
-
-## Files Reference
-
-| File | Purpose |
-|------|---------|
-| `auth.ts` | Auth.js configuration with custom JWT |
-| `app/lib/auth/jwt.ts` | Custom JWT encode/decode with RSA signing |
-| `app/lib/auth/keys.ts` | RSA key management |
-| `app/lib/token-exchange.ts` | Civic token exchange service |
-| `app/lib/ai/mcp.ts` | MCP client with token exchange |
-| `app/api/keys/.well-known/jwks.json/route.ts` | JWKS endpoint |
-| `app/api/keys/public/route.ts` | PEM public key endpoint |
-| `scripts/generate-keys.ts` | RSA key pair generator |
+- Ensure your Nexus organization is linked to your Civic Auth client
+- Check that your organization has the required MCP servers installed
+- Verify the access token is being passed correctly

@@ -5,7 +5,7 @@ import { streamText } from "ai";
 import { preprocessMessages } from "@/lib/message";
 
 import { models } from "@/lib/ai/llm";
-import { getMcpClient } from "@/lib/ai/mcp";
+import { getTools } from "@/lib/ai/mcp";
 import { handleCacheInvalidationForStep } from "@/lib/ai/cache-invalidation";
 import { debugAPI } from "@/lib/debug";
 import { auth } from "@/auth";
@@ -35,33 +35,6 @@ function convertToModelMessages(messages: UIMessage[]): ModelMessage[] {
   });
 }
 
-// Get tools for the current user session using the MCP client manager
-const getTools = async () => {
-  const noToolsResponse = {
-    tools: {},
-  };
-  try {
-    // Get an MCP client for the current authenticated user
-    const mcpClient = await getMcpClient();
-
-    // If we couldn't get a client (user not authenticated), return empty tools
-    if (!mcpClient) {
-      debugAPI("No authenticated user or MCP client available, returning empty tools");
-      return noToolsResponse;
-    }
-
-    // Get tools from the authenticated client
-    const tools = await mcpClient.tools();
-    debugAPI("Loaded tools:", Object.keys(tools));
-
-    return {
-      tools,
-    };
-  } catch (error) {
-    debugAPI("Error getting MCP tools:", error);
-    return noToolsResponse;
-  }
-};
 
 export async function POST(req: Request) {
   const { messages: rawMessages, provider } = (await req.json()) as {
@@ -81,11 +54,11 @@ export async function POST(req: Request) {
 
   preprocessMessages(messages);
 
-  // Get the MCP tools for this user's session
+  // Get the Nexus tools for this user's session
   const session = await auth();
   const user = session?.user?.id ? { id: session.user.id } : null;
-  const mcpTools = await getTools();
-  debugAPI("Loaded MCP tools:", Object.keys(mcpTools));
+  const tools = await getTools();
+  debugAPI("Loaded Nexus tools:", Object.keys(tools));
 
   try {
     const result = streamText({
@@ -95,7 +68,7 @@ export async function POST(req: Request) {
         "You are a helpful AI assistant that can answer questions on a variety of topics." +
         "When answering a question, make sure to respond to the user after at most 5 tool calls," +
         "let them know what you know so far, and what you plan to do next, and wait for further instructions.",
-      tools: mcpTools.tools,
+      tools,
       // onChunk: (chunk => {
       //   debugAPI("streamText chunk: %o", chunk);
       // }),
