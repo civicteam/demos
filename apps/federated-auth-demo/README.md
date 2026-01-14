@@ -102,6 +102,71 @@ pnpm dev
    - Email: `demo@example.com`
    - Password: `demo123`
 
+## Implementation Details
+
+### Token Exchange
+
+The token exchange follows [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) to swap your app's JWT for a Civic access token. See `app/lib/token-exchange.ts`:
+
+```typescript
+import { exchangeTokenForCivic } from "@/lib/token-exchange";
+
+// Exchange your app's JWT for a Civic access token
+const civicToken = await exchangeTokenForCivic(sessionToken);
+// Returns: { accessToken, tokenType, expiresIn, expiresAt }
+```
+
+The exchange makes a POST request to Civic Auth's `/token` endpoint:
+
+```
+POST https://auth.civic.com/oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic <base64(clientId:clientSecret)>
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&subject_token=<your-jwt>
+&scope=openid profile email
+```
+
+### Using @civic/nexus-client
+
+This demo uses `@civic/nexus-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+
+```typescript
+import { NexusClient } from "@civic/nexus-client";
+import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+
+// Create a Nexus client with the exchanged Civic token
+const client = new NexusClient({
+  url: process.env.MCP_SERVER_URL,
+  auth: {
+    token: civicToken.accessToken,
+  },
+  headers: {
+    "x-civic-profile": "default",  // Required for federated auth
+  },
+});
+
+// Get tools adapted for Vercel AI SDK
+const tools = await client.getTools(vercelAIAdapter());
+
+// Use with your AI model
+const result = await generateText({
+  model: yourModel,
+  tools,
+  prompt: "...",
+});
+
+// Clean up when done
+await client.close();
+```
+
+The `x-civic-profile` header is required for federated authentication to lock users to a specific profile within your Nexus organization.
+
+### Client Caching
+
+The demo caches `NexusClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
+
 ## Environment Variables
 
 | Variable | Description |
