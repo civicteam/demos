@@ -5,7 +5,8 @@ import { streamText } from "ai";
 import { preprocessMessages } from "@/lib/message";
 
 import { models } from "@/lib/ai/llm";
-import { getTools } from "@/lib/ai/mcp";
+import { getTools, getNexusClient } from "@/lib/ai/mcp";
+import { wrapToolsWithCivicAuth } from "@/lib/ai/civic-rest-auth";
 import { handleCacheInvalidationForStep } from "@/lib/ai/cache-invalidation";
 import { debugAPI } from "@/lib/debug";
 import { auth } from "@/auth";
@@ -57,8 +58,17 @@ export async function POST(req: Request) {
   // Get the Nexus tools for this user's session
   const session = await auth();
   const user = session?.user?.id ? { id: session.user.id } : null;
-  const tools = await getTools();
-  debugAPI("Loaded Nexus tools:", Object.keys(tools));
+  const rawTools = await getTools();
+  debugAPI("Loaded Nexus tools:", Object.keys(rawTools));
+
+  // Wrap tools with civic:rest-auth handling
+  let tools = rawTools;
+  if (user) {
+    const nexusClient = await getNexusClient();
+    if (nexusClient) {
+      tools = wrapToolsWithCivicAuth(rawTools, nexusClient, user.id);
+    }
+  }
 
   try {
     const result = streamText({

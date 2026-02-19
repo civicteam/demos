@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useState, useRef } from "react";
+import { useCivicAuth } from "../hooks/useCivicAuth";
 
 import { withBasePath } from "../../lib/utils";
 import { MessageContent } from "./MessageContent";
@@ -42,6 +43,7 @@ export default function Chatbot() {
   });
 
   const aiIsTyping = status === "streaming" || status === "submitted";
+  useCivicAuth(aiIsTyping);
 
   // Check if any messages have tool invocations
   const hasToolInvocations = messages.some((message) =>
