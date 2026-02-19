@@ -84,6 +84,11 @@ export async function getNexusClient(): Promise<NexusClient | null> {
       headers: {
         "x-civic-profile": "default",
       },
+      capabilities: {
+        experimental: {
+          "civic:rest-auth": { version: "1.0" },
+        },
+      },
     });
 
     // Cache the client with Civic token expiry
@@ -156,6 +161,16 @@ export async function cleanupInactiveClients(): Promise<void> {
   if (inactiveUserIds.length > 0) {
     debugAPI(`Cleaned up ${inactiveUserIds.length} inactive Nexus clients`);
   }
+}
+
+/**
+ * Get the Civic auth token for the given user ID from the cached client.
+ */
+export function getCivicAuthToken(userId: string): string | null {
+  const cachedEntry = clientCache.get(userId);
+  if (!cachedEntry) return null;
+  const token = cachedEntry.client.getConfig().auth.token;
+  return typeof token === "string" ? token : null;
 }
 
 // Set up periodic cleanup of inactive clients (every 15 minutes)
