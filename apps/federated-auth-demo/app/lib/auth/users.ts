@@ -19,6 +19,15 @@ const users = new Map<string, StoredUser>([
       password: "demo123",
     },
   ],
+  [
+    "user2@example.com",
+    {
+      id: "user-2",
+      email: "user2@example.com",
+      name: "Second User",
+      password: "demo123",
+    },
+  ],
 ]);
 
 export function findUserByCredentials(email: string, password: string): User | null {
