@@ -50,4 +50,8 @@ const authConfig: NextAuthConfig = {
   },
 };
 
-export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);
+const nextAuth = NextAuth(authConfig);
+export const handlers = nextAuth.handlers;
+export const signIn: typeof nextAuth.signIn = nextAuth.signIn;
+export const signOut = nextAuth.signOut;
+export const auth = nextAuth.auth;
