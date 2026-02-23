@@ -172,7 +172,130 @@ export default async function MyAudiPage() {
             ))}
           </div>
         </section>
+
+
+        {/* Full-bleed upsell: Full Self-Driving */}
+        <section className="relative w-full min-h-[60vh] overflow-hidden">
+          <BasePathImage
+            src="hero-image-4.jpeg"
+            alt=""
+            fill
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30"
+            aria-hidden
+          />
+          <div className="absolute inset-0 z-10 flex flex-col justify-end px-4 py-10 md:px-8 md:py-16 lg:px-12">
+            <div className="max-w-7xl mx-auto w-full">
+              <p className="text-xs uppercase tracking-[0.22em] text-white/80 mb-2">Upgrade</p>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-4">Full Self-Driving</h2>
+              <p className="text-white/90 max-w-2xl text-lg md:text-lg mb-6">
+                Relax on every journey. Add hands-free driving to your vehicle.
+              </p>
+              <Link
+                href="#"
+                className="inline-flex items-center text-white font-medium underline underline-offset-4 hover:text-white/90 transition-colors"
+              >
+                Learn more
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-7xl mx-auto px-4 py-8 md:px-8">
+          <p className="text-xs uppercase tracking-[0.22em] mb-4">Vehicle & ownership</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Service history</h3>
+              <p className="text-sm text-gray-400">Past services, next service due, book service</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Warranty & coverage</h3>
+              <p className="text-sm text-gray-400">Warranty status, extended warranty, care packages</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Recall & campaigns</h3>
+              <p className="text-sm text-gray-400">Open recalls and campaigns per vehicle, completion status</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Mileage & condition</h3>
+              <p className="text-sm text-gray-400">Odometer, tire pressure, fluid levels (if connected)</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Digital key & access</h3>
+              <p className="text-sm text-gray-400">Key status, share key, lock/unlock (for supported models)</p>
+            </Link>
+          </div>
+        </section>
+
+        <section className="max-w-7xl mx-auto px-4 py-8 md:px-8">
+          <p className="text-xs uppercase tracking-[0.22em] mb-4">Promo & commercial</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Accessories</h3>
+              <p className="text-sm text-gray-400">Recommended for your model</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Care & protection</h3>
+              <p className="text-sm text-gray-400">Paint protection, extended service plans</p>
+            </Link>
+            <Link
+              href="#"
+              className="block rounded-xl border border-white/15 bg-gradient-to-b from-gray-900 to-black p-5 shadow-lg shadow-black/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-white/25"
+            >
+              <h3 className="text-lg font-semibold text-white mb-1">Next car & loyalty</h3>
+              <p className="text-sm text-gray-400">Upgrade offers, loyalty program</p>
+            </Link>
+          </div>
+        </section>
+
       </main>
+
+      <footer className="w-full border-t border-white/10 bg-black py-8 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+          <Link className="flex items-center" href="/">
+            <BasePathImage
+              alt="Audi"
+              height={10}
+              src="audi-logo.svg"
+              width={56}
+              className="opacity-90"
+            />
+          </Link>
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+            <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="#" className="hover:text-white transition-colors">Terms of use</Link>
+            <Link href="#" className="hover:text-white transition-colors">Legal</Link>
+            <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+          </nav>
+        </div>
+        <div className="max-w-7xl mx-auto w-full mt-6 pt-6 border-t border-white/10 text-center text-xs text-gray-500">
+          © {new Date().getFullYear()} Audi. myAudi demo.
+        </div>
+      </footer>
     </div >
   );
 }
