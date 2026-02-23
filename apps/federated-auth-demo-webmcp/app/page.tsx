@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import BasePathImage from "./components/BasePathImage";
 import { LoginForm } from "./components/LoginForm";
-import SpeechBubbles from "./components/SpeechBubbles";
+
 import ThemeToggle from "./components/ThemeToggle";
 import styles from "./page.module.css";
 
@@ -59,7 +59,7 @@ export default async function Home() {
           <p className="mb-4">Sign in with email and password</p>
         </div>
         <LoginForm />
-        <SpeechBubbles />
+
       </main>
       <footer className={styles.footer}>
         <a
