@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: https: blob:; " +
               "font-src 'self' data:; " +
-              `connect-src 'self' ${process.env.WEB_APP_ORIGIN ?? "https://nexus.civic.com"} https://auth.civic.com; ` +
+              `connect-src 'self' ${process.env.WEB_APP_ORIGIN ?? "https://nexus.civic.com"} ${process.env.MCP_SERVER_URL ? new URL(process.env.MCP_SERVER_URL).origin : ""} https://auth.civic.com; ` +
               "frame-src 'self'; " +
               "frame-ancestors 'self'; " +
               "base-uri 'self'; " +
