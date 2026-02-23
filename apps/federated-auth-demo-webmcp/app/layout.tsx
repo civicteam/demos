@@ -21,8 +21,8 @@ const fontFaceStyle = `@font-face {
 }`;
 
 export const metadata: Metadata = {
-  title: "Whitelabel AI",
-  description: "Whitelabel AI Assistant",
+  title: "myAudi - Audi Garage",
+  description: "myAudi – Your vehicles, service, and ownership",
 };
 
 export default function RootLayout({
