@@ -101,6 +101,7 @@ pnpm dev
 5. Open [http://localhost:3000](http://localhost:3000) and log in with:
    - Email: `demo@example.com`
    - Password: `demo123`
+6. After login, you'll be redirected to `/my-audi` to view the vehicle dashboard.
 
 ## Implementation Details
 
@@ -205,6 +206,7 @@ Your JWT must include these claims:
 | `app/lib/auth/keys.ts` | RSA key management |
 | `app/lib/token-exchange.ts` | Civic token exchange service |
 | `app/lib/ai/mcp.ts` | MCP client setup |
+| `app/my-audi/page.tsx` | Authenticated My Audi dashboard page |
 | `app/api/keys/.well-known/jwks.json/route.ts` | JWKS endpoint |
 | `app/api/keys/public/route.ts` | PEM public key endpoint |
 | `scripts/generate-keys.ts` | RSA key pair generator |

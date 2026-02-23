@@ -12,10 +12,10 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-4">
-      <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:inline-block">
+      <span className="text-xs text-gray-600 dark:text-gray-300 hidden md:inline-block">
         {session.user.email}
       </span>
-      <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/" })}>
+      <Button variant="outline" className="text-xs" size="sm" onClick={() => signOut({ callbackUrl: "/" })}>
         Sign out
       </Button>
     </div>

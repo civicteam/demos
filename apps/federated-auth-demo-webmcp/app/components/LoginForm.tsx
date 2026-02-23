@@ -29,7 +29,7 @@ export function LoginForm() {
     if (result?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/chat");
+      router.push("/my-audi");
     }
   }
 
@@ -42,6 +42,7 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="bg-black/30 dark:bg-black/40 placeholder:text-gray-300 dark:placeholder:text-gray-400 border-white/20"
         />
       </div>
       <div>
@@ -51,13 +52,14 @@ export function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="bg-black/30 dark:bg-black/40 placeholder:text-gray-300 dark:placeholder:text-gray-400 border-white/20"
         />
       </div>
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Signing in..." : "Sign in"}
       </Button>
-      <p className="text-sm text-gray-500 text-center">
+      <p className="text-xs text-center text-gray-400">
         Demo credentials: demo@example.com / demo123
       </p>
     </form>

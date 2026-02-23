@@ -33,52 +33,46 @@ const ThemeImage = (props: Props) => {
 export default async function Home() {
   const session = await auth();
 
-  // If logged in, redirect to chat page
+  // If logged in, redirect to My Audi page
   if (session?.user) {
-    redirect("/chat");
+    redirect("/my-audi");
   }
 
   return (
-    <div className={styles.page}>
-      <div className="absolute top-4 right-4">
+    <div className={`${styles.page} relative`}>
+      <div className="absolute inset-0 z-0">
+        <BasePathImage
+          src="hero-image.jpeg"
+          alt=""
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="100vw"
+        />
+        <div
+          className="absolute inset-0 bg-black/50"
+          aria-hidden
+        />
+      </div>
+      <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
-      <main className={styles.main}>
-        <div className="flex justify-center items-center w-full mb-12">
-          <ThemeImage
-            alt="Civic logo"
-            className=""
-            height={38}
-            srcDark="civic-logo-white.svg"
-            srcLight="civic-logo-dark.svg"
-            width={240}
+      <main className={`${styles.main} relative z-10`}>
+
+        <div className="mb-8 text-center w-full max-w-sm mx-auto">
+          <BasePathImage
+            src="audi-logo.svg"
+            alt="Audi"
+            width={80}
+            height={32}
+            className="mx-auto mb-3"
           />
+          <h1 className="text-3xl font-bold mb-4 font-auditype">myAudi</h1>
+          <p className="mb-4 text-sm">Sign in to view your Audi garage</p>
+          <LoginForm />
         </div>
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Federated auth demo</h1>
-          <p className="mb-4">Sign in with email and password</p>
-        </div>
-        <LoginForm />
-        <SpeechBubbles />
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <BasePathImage aria-hidden alt="Window icon" height={16} src="window.svg" width={16} />
-          Examples
-        </a>
-        <a
-          href="https://turbo.build?utm_source=create-turbo"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <BasePathImage aria-hidden alt="Globe icon" height={16} src="globe.svg" width={16} />
-          Go to turbo.build →
-        </a>
-      </footer>
+
     </div>
   );
 }

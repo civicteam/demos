@@ -60,6 +60,7 @@
 }
 
 @theme inline {
+  --font-auditype: var(--font-auditype), ui-sans-serif, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -97,4 +98,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.font-auditype-variable {
+  --font-auditype: "Auditype", ui-sans-serif, sans-serif;
 }
