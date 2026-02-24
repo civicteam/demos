@@ -26,20 +26,34 @@ interface TokenResponse {
   expiresAt: string;
 }
 
+export interface McpLogEntry {
+  id: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  requestedAt: number;
+  response?: CallToolResult;
+  respondedAt?: number;
+  error?: string;
+}
+
 export interface WebMCPState {
   isRegistered: boolean;
   isLoading: boolean;
   error: string | null;
   toolCount: number;
   tools: Array<{ name: string; description: string }>;
+  log: McpLogEntry[];
   refresh: () => Promise<void>;
 }
+
+let logIdCounter = 0;
 
 export function useWebMCP(): WebMCPState {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<Array<{ name: string; description: string }>>([]);
+  const [log, setLog] = useState<McpLogEntry[]>([]);
   const nexusRef = useRef<NexusClient | null>(null);
   const registeredToolNamesRef = useRef<string[]>([]);
 
@@ -111,8 +125,36 @@ export function useWebMCP(): WebMCPState {
           description: tool.description ?? "",
           inputSchema: tool.input_schema as Record<string, unknown>,
           execute: async (args: Record<string, unknown>) => {
-            console.log("[WebMCP] callTool", tool.name, args);
-            return nexus.callTool(tool.name, args);
+            const entryId = `mcp-${++logIdCounter}`;
+            const entry: McpLogEntry = {
+              id: entryId,
+              toolName: tool.name,
+              args,
+              requestedAt: Date.now(),
+            };
+            setLog((prev) => [...prev, entry]);
+
+            try {
+              const result = await nexus.callTool(tool.name, args);
+              setLog((prev) =>
+                prev.map((e) =>
+                  e.id === entryId
+                    ? { ...e, response: result, respondedAt: Date.now() }
+                    : e
+                )
+              );
+              return result;
+            } catch (err) {
+              const message = err instanceof Error ? err.message : "Unknown error";
+              setLog((prev) =>
+                prev.map((e) =>
+                  e.id === entryId
+                    ? { ...e, error: message, respondedAt: Date.now() }
+                    : e
+                )
+              );
+              throw err;
+            }
           },
         };
 
@@ -153,6 +195,7 @@ export function useWebMCP(): WebMCPState {
     error,
     toolCount: tools.length,
     tools,
+    log,
     refresh: initialize,
   };
 }
