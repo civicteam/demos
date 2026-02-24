@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import BasePathImage from "../components/BasePathImage";
+import { McpMenu } from "../components/McpMenu";
 import { UserMenu } from "../components/UserMenu";
 
 type OwnedAudi = {
@@ -87,7 +88,8 @@ export default async function MyAudiPage() {
               />
             </Link>
           </div>
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-4">
+            <McpMenu />
             <UserMenu />
           </div>
         </div>
