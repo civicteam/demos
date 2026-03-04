@@ -56,6 +56,7 @@ export function useWebMCP(): WebMCPState {
   const [log, setLog] = useState<McpLogEntry[]>([]);
   const nexusRef = useRef<NexusClient | null>(null);
   const registeredToolNamesRef = useRef<string[]>([]);
+  const initializingRef = useRef<AbortController | null>(null);
 
   const cleanup = useCallback(async () => {
     const modelContext = navigator.modelContext;
@@ -75,11 +76,20 @@ export function useWebMCP(): WebMCPState {
   }, []);
 
   const initialize = useCallback(async () => {
+    // Abort any in-flight initialization to prevent duplicate tool registration
+    if (initializingRef.current) {
+      initializingRef.current.abort();
+    }
+    const controller = new AbortController();
+    initializingRef.current = controller;
+
     setIsLoading(true);
     setError(null);
 
     try {
       await cleanup();
+
+      if (controller.signal.aborted) return;
 
       // 1. Fetch access token from server (token exchange requires client secret)
       const response = await fetch("/api/auth/token");
@@ -109,6 +119,8 @@ export function useWebMCP(): WebMCPState {
       const mcpTools = await nexus.getTools(anthropicAdapter());
 
       console.log("[WebMCP] Got tools:", mcpTools.length, mcpTools.map((t: { name: string }) => t.name));
+
+      if (controller.signal.aborted) return;
 
       // 4. Register with WebMCP if available
       const modelContext = navigator.modelContext;
@@ -172,6 +184,7 @@ export function useWebMCP(): WebMCPState {
       registeredToolNamesRef.current = registeredNames;
       setTools(toolSummaries);
       setIsRegistered(true);
+      initializingRef.current = null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[WebMCP] Error:", message, err);
@@ -185,6 +198,9 @@ export function useWebMCP(): WebMCPState {
   useEffect(() => {
     initialize();
     return () => {
+      if (initializingRef.current) {
+        initializingRef.current.abort();
+      }
       cleanup();
     };
   }, [initialize, cleanup]);
