@@ -20,5 +20,5 @@ export const models: Record<string, LanguageModelV3> = {
   // Specify the "us." prefix in us-east-1 to route to the correct region. https://github.com/danny-avila/LibreChat/discussions/4571
   bedrock: bedrockProvider("us.anthropic.claude-3-5-sonnet-20241022-v2:0"), //('deepseek-llm-r1-distill-llama-70b'),
   openai: openaiProvider("gpt-4o"),
-  anthropic: anthropicProvider("claude-3-7-sonnet-20250219"),
+  anthropic: anthropicProvider("claude-sonnet-4-6"),
 };
