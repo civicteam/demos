@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { DefaultChatTransport } from "ai";
 
 const modelOptions = [
-  { value: "anthropic", label: "Anthropic (Claude 3.7 Sonnet)" },
+  { value: "anthropic", label: "Anthropic (Claude Sonnet 4.6)" },
 ];
 
 export default function Chatbot() {
