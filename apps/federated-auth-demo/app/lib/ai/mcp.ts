@@ -72,10 +72,10 @@ export async function getNexusClient(): Promise<NexusClient | null> {
           subjectToken: getSessionToken as () => Promise<string>,
         },
       },
-      // civicAccount: "e89bc6b5-12d7-4df7-9204-bc8c968f630b",
-      // civicProfile: "26d15643-82ad-41a4-95d3-168e23f1fe6f",
+      civicAccount: process.env.CIVIC_ACCOUNT_ID,
+      civicProfile: process.env.CIVIC_PROFILE_ID,
       headers: {
-        "x-civic-profile": "default",
+        "x-civic-profile": "default", // TODO: remove once x-civic-profile-id is rolled out in production
       },
       capabilities: {
         experimental: {

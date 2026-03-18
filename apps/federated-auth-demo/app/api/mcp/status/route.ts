@@ -63,7 +63,8 @@ export async function GET(): Promise<Response> {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            "x-civic-profile": "default",
+            "x-civic-profile": "default", // TODO: remove once x-civic-profile-id is rolled out in production
+            ...(process.env.CIVIC_PROFILE_ID && { "x-civic-profile-id": process.env.CIVIC_PROFILE_ID }),
           },
         });
 
