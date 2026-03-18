@@ -33,6 +33,10 @@ const authConfig: NextAuthConfig = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        // Pass through optional claims from User
+        const u = user as Record<string, unknown>;
+        if (u.email_verified !== undefined) token.email_verified = u.email_verified;
+        if (u.picture) token.picture = u.picture as string;
       }
       return token;
     },
@@ -41,6 +45,7 @@ const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        if (token.picture) session.user.image = token.picture as string;
       }
       return session;
     },
