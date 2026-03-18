@@ -65,7 +65,7 @@ In your Civic Auth application settings:
 Better Auth requires a database (this demo uses SQLite). Generate the tables:
 
 ```bash
-npx @better-auth/cli migrate
+npx @better-auth/cli migrate --config ./app/lib/auth/server.ts -y
 ```
 
 This creates an `auth.db` file in the app directory (already gitignored).

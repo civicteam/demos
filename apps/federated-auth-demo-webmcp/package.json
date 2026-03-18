@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@auth/core": "0.37.2",
-    "@civic/nexus-client": "^0.1.0",
+    "@civic/nexus-client": "^0.2.0",
     "@modelcontextprotocol/sdk": "1.25.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@tailwindcss/postcss": "^4.1.16",
