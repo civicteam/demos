@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import { cookies } from "next/headers";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
+import { getMcpClient } from "@/lib/ai/mcp";
+import { debugAPI } from "@/lib/debug";
 
 export interface McpStatusResponse {
   authenticated: boolean;
@@ -14,14 +14,6 @@ export interface McpStatusResponse {
     toolCount?: number;
     error?: string;
   };
-}
-
-async function getSessionToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionToken =
-    cookieStore.get("authjs.session-token")?.value ??
-    cookieStore.get("__Secure-authjs.session-token")?.value;
-  return sessionToken ?? null;
 }
 
 export async function GET(): Promise<Response> {
@@ -40,16 +32,23 @@ export async function GET(): Promise<Response> {
       return Response.json(status);
     }
 
-    // Try token exchange
-    const sessionToken = await getSessionToken();
-    if (!sessionToken) {
-      status.tokenExchange = { status: "failed", error: "No session token" };
-      return Response.json(status);
-    }
-
+    // Try to get an MCP client (handles token exchange internally)
     try {
-      const civicToken = await exchangeTokenForCivic(sessionToken);
-      status.tokenExchange = { status: "success", accessToken: civicToken.accessToken };
+      const client = await getMcpClient();
+
+      if (!client) {
+        debugAPI("[mcp/status] Could not create MCP client");
+        status.tokenExchange = { status: "failed", error: "Could not create MCP client" };
+        return Response.json(status);
+      }
+
+      // Resolve the token (triggers exchange if needed) so getAccessToken() is populated
+      const token = await client.getConfig().resolveToken();
+
+      status.tokenExchange = {
+        status: "success",
+        accessToken: client.getAccessToken(),
+      };
 
       // Try to connect to MCP
       const mcpServerUrl = process.env.MCP_SERVER_URL;
@@ -59,33 +58,30 @@ export async function GET(): Promise<Response> {
       }
 
       // Simple connectivity check - just verify the server is reachable and auth works
-      // We use GET which returns the MCP protocol metadata
       try {
         const mcpResponse = await fetch(mcpServerUrl, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${civicToken.accessToken}`,
-            "x-civic-profile": "default",
+            Authorization: `Bearer ${token}`,
           },
         });
 
+        const responseText = await mcpResponse.text();
+        debugAPI("[mcp/status] MCP check response: %d %s", mcpResponse.status, responseText.slice(0, 200));
+
         if (mcpResponse.ok) {
-          status.mcp = {
-            connected: true,
-          };
+          status.mcp = { connected: true };
         } else if (mcpResponse.status === 401) {
-          const errorText = await mcpResponse.text();
           status.mcp = {
             connected: false,
-            error: `Auth failed: ${errorText.slice(0, 100)}`,
+            error: `Auth failed: ${responseText.slice(0, 100)}`,
           };
         } else {
-          status.mcp = {
-            connected: true, // Server is reachable, might just be returning non-200 for GET
-          };
+          status.mcp = { connected: true }; // Server is reachable
         }
       } catch (mcpError) {
         const mcpErrorMessage = mcpError instanceof Error ? mcpError.message : "Unknown error";
+        debugAPI("[mcp/status] MCP connectivity check failed:", mcpErrorMessage);
         status.mcp = {
           connected: false,
           error: mcpErrorMessage.includes("ECONNREFUSED")
@@ -95,6 +91,7 @@ export async function GET(): Promise<Response> {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      debugAPI("[mcp/status] Token exchange failed:", errorMessage);
       status.tokenExchange = { status: "failed", error: errorMessage };
       status.mcp = { connected: false, error: "Token exchange failed" };
     }
@@ -102,6 +99,7 @@ export async function GET(): Promise<Response> {
     return Response.json(status);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    debugAPI("[mcp/status] Unexpected error:", errorMessage);
     return Response.json({
       ...status,
       tokenExchange: { status: "failed", error: errorMessage },

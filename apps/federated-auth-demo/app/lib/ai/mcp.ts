@@ -4,15 +4,13 @@ import { auth } from "@/auth";
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { cookies } from "next/headers";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
 
 interface CachedClient {
   client: CivicMcpClient;
   lastUsed: number;
-  civicTokenExpiry: Date;
 }
 
-// Cache of Nexus clients by user ID
+// Cache of MCP clients by user ID
 const clientCache = new Map<string, CachedClient>();
 
 // Timeout for client inactivity in milliseconds (60 minutes)
@@ -30,57 +28,51 @@ async function getSessionToken(): Promise<string | null> {
 }
 
 /**
- * Get or create a Nexus client for the specified user ID.
+ * Get or create an MCP client for the specified user ID.
  * Clients are cached and reused for subsequent requests.
- * Performs token exchange to get a Civic access token.
+ * Token exchange is handled internally by the CivicMcpClient.
  */
-export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
+export async function getMcpClient(): Promise<CivicMcpClient | null> {
   try {
     // Get the current authenticated user
     const session = await auth();
 
     // If no user is logged in, don't create a client
     if (!session?.user?.id) {
-      debugAPI("No authenticated user found, not creating Nexus client");
+      debugAPI("No authenticated user found, not creating MCP client");
       return null;
     }
 
     const userId = session.user.id;
 
-    // Check if we already have a cached client for this user with valid Civic token
+    // Check if we already have a cached client for this user
     const cachedEntry = clientCache.get(userId);
-    if (cachedEntry && cachedEntry.civicTokenExpiry > new Date()) {
-      debugAPI(`Using cached Nexus client for user ${userId}`);
-      // Update the last used timestamp
+    if (cachedEntry) {
+      debugAPI(`Using cached MCP client for user ${userId}`);
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
 
-    // Close expired client if exists
-    if (cachedEntry) {
-      debugAPI(`Civic token expired for user ${userId}, refreshing...`);
-      await closeCivicMcpClient(userId);
-    }
-
-    // Get the session JWT token
-    const sessionToken = await getSessionToken();
-    if (!sessionToken) {
-      debugAPI("No session token found, cannot exchange for Civic token");
+    const clientId = process.env.CIVIC_AUTH_CLIENT_ID;
+    const clientSecret = process.env.CIVIC_AUTH_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      debugAPI("CIVIC_AUTH_CLIENT_ID and CIVIC_AUTH_CLIENT_SECRET are required");
       return null;
     }
 
-    // Exchange our JWT for a Civic access token
-    debugAPI("Exchanging JWT for Civic access token");
-    const civicToken = await exchangeTokenForCivic(sessionToken);
-
-    // Create a new Nexus client for this user with the Civic token
-    debugAPI(`Creating new Nexus client for user ${userId}`);
+    // Create a new MCP client with token exchange handled by the client
+    debugAPI(`Creating new MCP client for user ${userId}`);
 
     const client = new CivicMcpClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
-        token: civicToken.accessToken,
+        tokenExchange: {
+          clientId,
+          clientSecret,
+          subjectToken: getSessionToken as () => Promise<string>,
+        },
       },
+      civicProfile: process.env.CIVIC_PROFILE_ID,
       capabilities: {
         experimental: {
           "civic:rest-auth": { version: "1.0" },
@@ -88,30 +80,29 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
       },
     });
 
-    // Cache the client with Civic token expiry
+    // Cache the client
     clientCache.set(userId, {
       client,
       lastUsed: Date.now(),
-      civicTokenExpiry: civicToken.expiresAt,
     });
 
     return client;
   } catch (error) {
-    debugAPI("Error getting Nexus client for user:", error);
+    debugAPI("Error getting MCP client for user:", error);
     return null;
   }
 }
 
 /**
- * Get tools for the current user session using the Nexus client.
+ * Get tools for the current user session using the MCP client.
  * Returns tools adapted for the Vercel AI SDK.
  */
 export async function getTools(): Promise<ToolSet> {
   try {
-    const client = await getCivicMcpClient();
+    const client = await getMcpClient();
 
     if (!client) {
-      debugAPI("No authenticated user or Nexus client available, returning empty tools");
+      debugAPI("No authenticated user or MCP client available, returning empty tools");
       return {};
     }
 
@@ -120,7 +111,7 @@ export async function getTools(): Promise<ToolSet> {
 
     return tools as ToolSet;
   } catch (error) {
-    debugAPI("Error getting Nexus tools:", error);
+    debugAPI("Error getting MCP tools:", error);
     return {};
   }
 }
@@ -128,16 +119,16 @@ export async function getTools(): Promise<ToolSet> {
 /**
  * Remove a specific user's client from the cache and close the connection
  */
-export async function closeCivicMcpClient(userId: string): Promise<void> {
+export async function closeMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
     try {
       await cachedEntry.client.close();
     } catch (error) {
-      debugAPI(`Error closing Nexus client for user ${userId}:`, error);
+      debugAPI(`Error closing MCP client for user ${userId}:`, error);
     }
     clientCache.delete(userId);
-    debugAPI(`Removed Nexus client for user ${userId} from cache`);
+    debugAPI(`Removed MCP client for user ${userId} from cache`);
   }
 }
 
@@ -153,10 +144,10 @@ export async function cleanupInactiveClients(): Promise<void> {
     .map(([userId]) => userId);
 
   // Close and remove inactive clients
-  await Promise.all(inactiveUserIds.map(closeCivicMcpClient));
+  await Promise.all(inactiveUserIds.map(closeMcpClient));
 
   if (inactiveUserIds.length > 0) {
-    debugAPI(`Cleaned up ${inactiveUserIds.length} inactive Nexus clients`);
+    debugAPI(`Cleaned up ${inactiveUserIds.length} inactive MCP clients`);
   }
 }
 
@@ -166,8 +157,7 @@ export async function cleanupInactiveClients(): Promise<void> {
 export function getCivicAuthToken(userId: string): string | null {
   const cachedEntry = clientCache.get(userId);
   if (!cachedEntry) return null;
-  const token = cachedEntry.client.getConfig().auth.token;
-  return typeof token === "string" ? token : null;
+  return cachedEntry.client.getAccessToken() ?? null;
 }
 
 // Set up periodic cleanup of inactive clients (every 15 minutes)
@@ -181,6 +171,6 @@ if (typeof window === "undefined") {
   if (!cleanupInterval) {
     const CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 minutes
     cleanupInterval = setInterval(cleanupInactiveClients, CLEANUP_INTERVAL);
-    debugAPI("Registered Nexus client cleanup interval");
+    debugAPI("Registered MCP client cleanup interval");
   }
 }
