@@ -1,5 +1,5 @@
 import type { ToolSet } from "ai";
-import type { NexusClient } from "@civic/nexus-client";
+import type { CivicMcpClient } from "@civic/mcp-client";
 import { debugAPI } from "@/lib/debug";
 import { getCivicAuthToken } from "./mcp";
 
@@ -171,7 +171,7 @@ async function pollForApproval(
  */
 async function handleAuthFlow(
   authFields: CivicAuthFields,
-  nexusClient: NexusClient,
+  nexusClient: CivicMcpClient,
   userId: string,
   civicToken: string,
 ): Promise<unknown> {
@@ -241,7 +241,7 @@ async function handleAuthFlow(
  */
 export function wrapToolsWithCivicAuth(
   tools: ToolSet,
-  nexusClient: NexusClient,
+  nexusClient: CivicMcpClient,
   userId: string,
 ): ToolSet {
   const wrapped: ToolSet = {};

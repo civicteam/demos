@@ -1,13 +1,13 @@
 import type { ToolSet } from "ai";
 import { debugAPI } from "@/lib/debug";
 import { auth } from "@/auth";
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { cookies } from "next/headers";
 import { exchangeTokenForCivic } from "@/lib/token-exchange";
 
 interface CachedClient {
-  client: NexusClient;
+  client: CivicMcpClient;
   lastUsed: number;
   civicTokenExpiry: Date;
 }
@@ -34,7 +34,7 @@ async function getSessionToken(): Promise<string | null> {
  * Clients are cached and reused for subsequent requests.
  * Performs token exchange to get a Civic access token.
  */
-export async function getNexusClient(): Promise<NexusClient | null> {
+export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
   try {
     // Get the current authenticated user
     const session = await auth();
@@ -59,7 +59,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
     // Close expired client if exists
     if (cachedEntry) {
       debugAPI(`Civic token expired for user ${userId}, refreshing...`);
-      await closeNexusClient(userId);
+      await closeCivicMcpClient(userId);
     }
 
     // Get the session JWT token
@@ -76,13 +76,9 @@ export async function getNexusClient(): Promise<NexusClient | null> {
     // Create a new Nexus client for this user with the Civic token
     debugAPI(`Creating new Nexus client for user ${userId}`);
 
-    const client = new NexusClient({
-      url: process.env.MCP_SERVER_URL,
+    const client = new CivicMcpClient({
       auth: {
         token: civicToken.accessToken,
-      },
-      headers: {
-        "x-civic-profile": "default",
       },
       capabilities: {
         experimental: {
@@ -111,7 +107,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
  */
 export async function getTools(): Promise<ToolSet> {
   try {
-    const client = await getNexusClient();
+    const client = await getCivicMcpClient();
 
     if (!client) {
       debugAPI("No authenticated user or Nexus client available, returning empty tools");
@@ -131,7 +127,7 @@ export async function getTools(): Promise<ToolSet> {
 /**
  * Remove a specific user's client from the cache and close the connection
  */
-export async function closeNexusClient(userId: string): Promise<void> {
+export async function closeCivicMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
     try {
@@ -156,7 +152,7 @@ export async function cleanupInactiveClients(): Promise<void> {
     .map(([userId]) => userId);
 
   // Close and remove inactive clients
-  await Promise.all(inactiveUserIds.map(closeNexusClient));
+  await Promise.all(inactiveUserIds.map(closeCivicMcpClient));
 
   if (inactiveUserIds.length > 0) {
     debugAPI(`Cleaned up ${inactiveUserIds.length} inactive Nexus clients`);

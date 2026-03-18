@@ -127,16 +127,16 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &scope=openid profile email
 ```
 
-### Using @civic/nexus-client
+### Using @civic/mcp-client
 
-This demo uses `@civic/nexus-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+This demo uses `@civic/mcp-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
 
 ```typescript
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 
 // Create a Nexus client with the exchanged Civic token
-const client = new NexusClient({
+const client = new CivicMcpClient({
   url: process.env.MCP_SERVER_URL,
   auth: {
     token: civicToken.accessToken,
@@ -164,7 +164,7 @@ The `x-civic-profile` header is required for federated authentication to lock us
 
 ### Client Caching
 
-The demo caches `NexusClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
+The demo caches `CivicMcpClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
 
 ## Environment Variables
 

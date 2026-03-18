@@ -19,9 +19,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.1
         version: 3.0.33(react@19.2.3)(zod@4.3.6)
-      '@civic/nexus-client':
-        specifier: ^0.2.0
-        version: 0.2.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
+      '@civic/mcp-client':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.3
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -119,9 +119,9 @@ importers:
       '@civic/auth':
         specifier: ^0.15.1
         version: 0.15.1(@types/react@19.2.8)(express@5.2.1)(next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
-      '@civic/nexus-client':
-        specifier: ^0.2.0
-        version: 0.2.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
+      '@civic/mcp-client':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.3
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -216,9 +216,9 @@ importers:
       '@auth/core':
         specifier: 0.37.2
         version: 0.37.2
-      '@civic/nexus-client':
-        specifier: ^0.2.0
-        version: 0.2.0(ai@6.0.31(zod@4.3.5))(openai@4.104.0(zod@4.3.5))(zod@4.3.5)
+      '@civic/mcp-client':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@6.0.31(zod@4.3.5))(openai@4.104.0(zod@4.3.5))(zod@4.3.5)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.3
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -325,9 +325,9 @@ importers:
       '@auth/core':
         specifier: 0.37.2
         version: 0.37.2
-      '@civic/nexus-client':
-        specifier: ^0.2.0
-        version: 0.2.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
+      '@civic/mcp-client':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
       '@modelcontextprotocol/sdk':
         specifier: 1.25.2
         version: 1.25.2(hono@4.11.4)(zod@4.3.6)
@@ -416,9 +416,9 @@ importers:
       '@auth/core':
         specifier: 0.37.2
         version: 0.37.2
-      '@civic/nexus-client':
-        specifier: ^0.2.0
-        version: 0.2.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
+      '@civic/mcp-client':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.3
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -757,8 +757,8 @@ packages:
     peerDependencies:
       react: '>=18'
 
-  '@civic/nexus-client@0.2.0':
-    resolution: {integrity: sha512-qqOqaZpgdmtPAPuGfuhTYvgAQGKcZ28GBGAuoblSJzZwT4EhzjlVthmYz8wZpzKRaa1B9MBCAzW9YW7v9SobmQ==}
+  '@civic/mcp-client@0.1.0':
+    resolution: {integrity: sha512-B49vA72ExTkzSFLWna9AeqRe/Za+yCXjNMNTA/0LtOyFTNX2tf4GFW9owszl47U6fHOaKUiI60JwIcsaVs0qmA==}
     peerDependencies:
       '@ai-sdk/mcp': ^1.0.19
       '@anthropic-ai/sdk': ^0.71.0
@@ -4630,7 +4630,7 @@ snapshots:
     dependencies:
       react: 19.2.3
 
-  '@civic/nexus-client@0.2.0(ai@6.0.31(zod@4.3.5))(openai@4.104.0(zod@4.3.5))(zod@4.3.5)':
+  '@civic/mcp-client@0.1.0(ai@6.0.31(zod@4.3.5))(openai@4.104.0(zod@4.3.5))(zod@4.3.5)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.5)
     optionalDependencies:
@@ -4641,7 +4641,7 @@ snapshots:
       - supports-color
       - zod
 
-  '@civic/nexus-client@0.2.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)':
+  '@civic/mcp-client@0.1.0(ai@6.0.31(zod@4.3.6))(zod@4.3.6)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
     optionalDependencies:

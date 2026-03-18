@@ -1,14 +1,14 @@
 import type { ToolSet } from "ai";
 import { debugAPI } from "@/lib/debug";
 import { auth } from "@/auth";
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { exchangeTokenForCivic } from "@/lib/token-exchange";
 import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
 interface CachedClient {
-  client: NexusClient;
+  client: CivicMcpClient;
   lastUsed: number;
   civicTokenExpiry: Date;
 }
@@ -45,7 +45,7 @@ async function getGoogleIdToken(): Promise<string | null> {
   }
 }
 
-export async function getNexusClient(): Promise<NexusClient | null> {
+export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -64,7 +64,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
     if (cachedEntry) {
       debugAPI(`Civic token expired for user ${userId}, refreshing...`);
-      await closeNexusClient(userId);
+      await closeCivicMcpClient(userId);
     }
 
     const googleIdToken = await getGoogleIdToken();
@@ -77,13 +77,9 @@ export async function getNexusClient(): Promise<NexusClient | null> {
     const civicToken = await exchangeTokenForCivic(googleIdToken);
 
     debugAPI(`Creating new Nexus client for user ${userId}`);
-    const client = new NexusClient({
-      url: process.env.MCP_SERVER_URL,
+    const client = new CivicMcpClient({
       auth: {
         token: civicToken.accessToken,
-      },
-      headers: {
-        "x-civic-profile": "default",
       },
     });
 
@@ -102,7 +98,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
 export async function getTools(): Promise<ToolSet> {
   try {
-    const client = await getNexusClient();
+    const client = await getCivicMcpClient();
     if (!client) {
       debugAPI("No Nexus client available, returning empty tools");
       return {};
@@ -116,7 +112,7 @@ export async function getTools(): Promise<ToolSet> {
   }
 }
 
-export async function closeNexusClient(userId: string): Promise<void> {
+export async function closeCivicMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
     try { await cachedEntry.client.close(); } catch (error) { debugAPI("Error closing client:", error); }
@@ -129,7 +125,7 @@ export async function cleanupInactiveClients(): Promise<void> {
   const inactiveUserIds = Array.from(clientCache.entries())
     .filter(([, { lastUsed }]) => now - lastUsed > INACTIVITY_TIMEOUT)
     .map(([userId]) => userId);
-  await Promise.all(inactiveUserIds.map(closeNexusClient));
+  await Promise.all(inactiveUserIds.map(closeCivicMcpClient));
 }
 
 let cleanupInterval: NodeJS.Timeout | null = null;

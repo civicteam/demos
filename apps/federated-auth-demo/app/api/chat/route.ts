@@ -5,7 +5,7 @@ import { streamText } from "ai";
 import { preprocessMessages } from "@/lib/message";
 
 import { models } from "@/lib/ai/llm";
-import { getTools, getNexusClient } from "@/lib/ai/mcp";
+import { getTools, getCivicMcpClient } from "@/lib/ai/mcp";
 import { wrapToolsWithCivicAuth } from "@/lib/ai/civic-rest-auth";
 import { handleCacheInvalidationForStep } from "@/lib/ai/cache-invalidation";
 import { debugAPI } from "@/lib/debug";
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
   // Wrap tools with civic:rest-auth handling
   let tools = rawTools;
   if (user) {
-    const nexusClient = await getNexusClient();
+    const nexusClient = await getCivicMcpClient();
     if (nexusClient) {
       tools = wrapToolsWithCivicAuth(rawTools, nexusClient, user.id);
     }

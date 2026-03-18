@@ -1,18 +1,18 @@
 import type { ToolSet } from "ai";
 import { debugAPI } from "@/lib/debug";
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { getUser } from "@civic/auth/nextjs";
 
 interface CachedClient {
-  client: NexusClient;
+  client: CivicMcpClient;
   lastUsed: number;
 }
 
 const clientCache = new Map<string, CachedClient>();
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
 
-export async function getNexusClient(): Promise<NexusClient | null> {
+export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
   try {
     const user = await getUser();
     if (!user) {
@@ -44,15 +44,9 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
     // Civic Auth tokens are directly valid for the MCP endpoint
     // The middleware handles token refresh, we just need to get the current token
-    const client = new NexusClient({
-      url: process.env.MCP_SERVER_URL,
+    const client = new CivicMcpClient({
       auth: {
-        // @civic/auth handles token management internally
-        // The token is passed via cookies/session managed by the middleware
         token: (user as Record<string, unknown>).idToken as string || "",
-      },
-      headers: {
-        "x-civic-profile": "default",
       },
     });
 
@@ -70,7 +64,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
 export async function getTools(): Promise<ToolSet> {
   try {
-    const client = await getNexusClient();
+    const client = await getCivicMcpClient();
     if (!client) {
       debugAPI("No Nexus client available, returning empty tools");
       return {};
@@ -84,7 +78,7 @@ export async function getTools(): Promise<ToolSet> {
   }
 }
 
-export async function closeNexusClient(userId: string): Promise<void> {
+export async function closeCivicMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
     try { await cachedEntry.client.close(); } catch (error) { debugAPI("Error closing client:", error); }
@@ -97,7 +91,7 @@ export async function cleanupInactiveClients(): Promise<void> {
   const inactiveUserIds = Array.from(clientCache.entries())
     .filter(([, { lastUsed }]) => now - lastUsed > INACTIVITY_TIMEOUT)
     .map(([userId]) => userId);
-  await Promise.all(inactiveUserIds.map(closeNexusClient));
+  await Promise.all(inactiveUserIds.map(closeCivicMcpClient));
 }
 
 let cleanupInterval: NodeJS.Timeout | null = null;

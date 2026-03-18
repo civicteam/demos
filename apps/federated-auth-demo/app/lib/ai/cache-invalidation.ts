@@ -1,5 +1,5 @@
 import type { StepResult, ToolSet } from "ai";
-import { closeNexusClient } from "./mcp";
+import { closeCivicMcpClient } from "./mcp";
 import { debugAPI } from "@/lib/debug";
 
 // List of tool names that modify the server list and require cache invalidation
@@ -30,7 +30,7 @@ export function handleCacheInvalidationForStep<TOOLS extends ToolSet>(
     debugAPI(`Server-modifying tool called, invalidating Nexus client cache for user ${user.id}`);
 
     // Fire and forget - we don't need to wait for the cache invalidation
-    closeNexusClient(user.id).catch((error) => {
+    closeCivicMcpClient(user.id).catch((error: unknown) => {
       debugAPI(`Error during cache invalidation: ${error}`);
     });
   }
