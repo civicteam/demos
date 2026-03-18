@@ -7,8 +7,10 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 1. Users sign up / sign in with email + password via Better Auth
 2. Better Auth's JWT plugin issues RS256-signed JWTs and exposes a JWKS endpoint at `/api/auth/jwks`
 3. The app exchanges the Better Auth JWT for a Civic access token using OAuth 2.0 Token Exchange (RFC 8693)
-4. Civic Auth verifies the JWT against Better Auth's JWKS endpoint
+4. Civic Auth verifies the JWT against the public key
 5. The Civic access token is used to connect to Civic Nexus MCP for AI-powered tool calling
+
+> **Note**: This demo runs over HTTPS locally (via Next.js `--experimental-https`) so that the issuer URL matches Civic Auth's HTTPS requirement.
 
 ## Prerequisites
 
@@ -19,7 +21,24 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 
 ## Setup
 
-### Step 1: Configure Token Exchange in Civic Auth
+### Step 1: Install, Create Database, and Start the App
+
+```bash
+pnpm install
+npx @better-auth/cli migrate --config ./app/lib/auth/server.ts -y
+pnpm dev:better-auth
+```
+
+The app starts at **https://localhost:3023** (accept the self-signed cert warning in your browser).
+
+### Step 2: Export the Public Key
+
+Better Auth generates its RS256 keys on first run. To get the public key for Civic Auth:
+
+1. Visit `https://localhost:3023/api/keys/public` in your browser
+2. Copy the entire PEM key (including the `-----BEGIN PUBLIC KEY-----` and `-----END PUBLIC KEY-----` lines)
+
+### Step 3: Configure Token Exchange in Civic Auth
 
 In your Civic Auth application settings:
 
@@ -29,16 +48,16 @@ In your Civic Auth application settings:
 
 | Field | Value | Notes |
 |-------|-------|-------|
-| **Issuer URL** | `http://localhost:3023` | Better Auth uses the app URL as the JWT `iss` claim |
-| **Verification method** | JWKS URI | |
-| **JWKS URI** | `http://localhost:3023/api/auth/jwks` | Exposed automatically by Better Auth's JWT plugin |
-| **Audience** | `http://localhost:3023` | Better Auth defaults the `aud` claim to the app URL |
+| **Issuer URL** | `https://localhost:3023` | Must match `BETTER_AUTH_URL` |
+| **Verification method** | Static public key | Civic Auth can't reach localhost JWKS, so use the PEM from Step 2 |
+| **Public Key** | *(paste PEM from Step 2)* | The RS256 public key exported from Better Auth |
+| **Audience** | `https://localhost:3023` | Better Auth defaults the `aud` claim to the app URL |
 
 4. Click **Save provider**
 
-> **Note**: Better Auth's JWT plugin manages RS256 key generation and rotation automatically. The JWKS endpoint publishes the public keys -- no manual key management needed. This is simpler than the federated-auth-demo which requires generating RSA keys manually.
+> **Note**: Better Auth's JWT plugin manages key generation and rotation automatically. For production deployments with a public URL, you can use the JWKS URI (`https://your-domain.com/api/auth/jwks`) instead of a static key.
 
-### Step 2: Configure Environment Variables
+### Step 4: Configure Environment Variables
 
 1. Copy `.env.example` to `.env`:
 
@@ -50,7 +69,7 @@ In your Civic Auth application settings:
 
    ```
    BETTER_AUTH_SECRET=<generate with: openssl rand -base64 32>
-   BETTER_AUTH_URL=http://localhost:3023
+   BETTER_AUTH_URL=https://localhost:3023
 
    CIVIC_AUTH_URL=https://auth.civic.com/oauth
    CIVIC_CLIENT_ID=<your Civic Auth client ID>
@@ -60,36 +79,16 @@ In your Civic Auth application settings:
    ANTHROPIC_API_KEY=<your Anthropic API key>
    ```
 
-### Step 3: Create the Database
-
-Better Auth requires a database (this demo uses SQLite). Generate the tables:
-
-```bash
-npx @better-auth/cli migrate --config ./app/lib/auth/server.ts -y
-```
-
-This creates an `auth.db` file in the app directory (already gitignored).
-
-### Step 4: Install and Run
-
-```bash
-pnpm install
-pnpm dev:better-auth
-```
-
-Open [http://localhost:3023](http://localhost:3023).
-
 ### Step 5: Create an Account
 
-Unlike the federated-auth-demo which has hardcoded demo users, Better Auth uses a real database. On first run:
-
-1. Click **"Need an account? Sign up"**
-2. Enter a name, email and password (e.g., `demo@example.com` / `demo123`)
-3. Click **Sign Up**
-4. You'll be redirected to the chat page
+1. Open **https://localhost:3023** (accept the self-signed cert warning)
+2. Click **"Need an account? Sign up"**
+3. Enter a name, email and password (e.g., `demo@example.com` / `demo123`)
+4. Click **Sign Up**
+5. You'll be redirected to the chat page
 
 On subsequent visits, use **Sign In** with the same credentials.
 
 ## Port
 
-This app runs on port **3023**.
+This app runs on port **3023** over HTTPS.
