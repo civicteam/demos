@@ -25,6 +25,9 @@ dist/
 # Database
 *.db
 
+# Local TLS certs
+certs/
+
 # OS
 .DS_Store
 Thumbs.db

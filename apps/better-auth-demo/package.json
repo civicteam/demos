@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --experimental-https --port 3023",
+    "dev": "next dev --turbopack --experimental-https --experimental-https-key ./certs/localhost-key.pem --experimental-https-cert ./certs/localhost.pem --port 3023",
     "build": "next build --turbo",
     "start": "next start --port 3023",
     "lint": "eslint .",
