@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { NexusClient, type CallToolResult } from "@civic/nexus-client";
-import { anthropicAdapter } from "@civic/nexus-client/adapters/anthropic";
+import { CivicMcpClient, type CallToolResult } from "@civic/mcp-client";
+import { anthropicAdapter } from "@civic/mcp-client/adapters/anthropic";
 
 declare global {
   interface Navigator {
@@ -54,7 +54,7 @@ export function useWebMCP(): WebMCPState {
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<Array<{ name: string; description: string }>>([]);
   const [log, setLog] = useState<McpLogEntry[]>([]);
-  const nexusRef = useRef<NexusClient | null>(null);
+  const nexusRef = useRef<CivicMcpClient | null>(null);
   const registeredToolNamesRef = useRef<string[]>([]);
   const initializingRef = useRef<AbortController | null>(null);
 
@@ -105,8 +105,8 @@ export function useWebMCP(): WebMCPState {
 
       console.log("[WebMCP] Connecting to", mcpUrl);
 
-      // 2. Create NexusClient pointing directly at Nexus Hub
-      const nexus = new NexusClient({
+      // 2. Create CivicMcpClient pointing directly at Nexus Hub
+      const nexus = new CivicMcpClient({
         url: mcpUrl,
         auth: { token: accessToken },
         headers: {

@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter federated-auth-demo dev",
+    "dev:better-auth": "pnpm --filter better-auth-demo dev",
+    "dev:civic-auth": "pnpm --filter civic-auth-demo dev",
+    "dev:google-auth": "pnpm --filter google-auth-demo dev",
     "build": "pnpm --filter federated-auth-demo build",
     "check-types": "pnpm -r check-types",
     "lint": "pnpm -r lint"

@@ -43,20 +43,19 @@ This demo application shows how to integrate a custom authentication system with
 
 In your Civic Auth application settings, configure the Token Exchange feature:
 
-1. Navigate to the **Token Exchange** section
-2. Add a new token exchange provider with your app's details:
+1. Navigate to **Setup > Token Exchange > Add Provider**
+2. Select **Custom** provider and configure:
 
-| Field | Value |
-|-------|-------|
-| **Issuer** | Your app's URL (e.g., `https://your-app.example.com`) |
-| **Audience** | `civic-mcp` |
-| **Algorithm** | `RS256` |
+| Field | Value | Notes |
+|-------|-------|-------|
+| **Issuer URL** | `https://localhost:3000` | Must match the `ISSUER` constant in `app/lib/auth/jwt.ts` |
+| **Audience** | `civic-mcp` | Must match the `AUDIENCE` constant in `app/lib/auth/jwt.ts` |
+| **Algorithm** | `RS256` | |
+| **JWKS URL** | `http://localhost:3023/api/keys/.well-known/jwks.json` | Exposed by the app (see `app/api/keys/.well-known/jwks.json/route.ts`) |
 
-3. Provide your public key using one of these methods:
-   - **JWKS URL**: `https://your-app.example.com/api/keys/.well-known/jwks.json`
-   - **PEM**: Paste your public key directly
+Alternatively, instead of the JWKS URL, you can paste your **public key PEM** directly (the value of `JWT_PUBLIC_KEY` from your `.env`).
 
-> **Note**: The issuer and audience must match exactly what your app includes in its JWT claims.
+> **Note**: The issuer and audience values are hardcoded in `app/lib/auth/jwt.ts`. If you change them, you must also update the Civic Auth token exchange configuration to match.
 
 ### Step 3: Create a Civic Nexus Organization
 
@@ -128,16 +127,16 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &scope=openid profile email
 ```
 
-### Using @civic/nexus-client
+### Using @civic/mcp-client
 
-This demo uses `@civic/nexus-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+This demo uses `@civic/mcp-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
 
 ```typescript
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 
 // Create a Nexus client with the exchanged Civic token
-const client = new NexusClient({
+const client = new CivicMcpClient({
   url: process.env.MCP_SERVER_URL,
   auth: {
     token: civicToken.accessToken,
@@ -165,7 +164,7 @@ The `x-civic-profile` header is required for federated authentication to lock us
 
 ### Client Caching
 
-The demo caches `NexusClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
+The demo caches `CivicMcpClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
 
 ## Environment Variables
 
@@ -176,8 +175,8 @@ The demo caches `NexusClient` instances per user to avoid repeated token exchang
 | `JWT_PUBLIC_KEY` | RSA public key for JWT verification |
 | `JWT_PRIVATE_KEY` | RSA private key for JWT signing |
 | `CIVIC_AUTH_URL` | Civic Auth endpoint (default: `https://auth.civic.com/oauth`) |
-| `CIVIC_AUTH_CLIENT_ID` | Your Civic Auth client ID |
-| `CIVIC_AUTH_CLIENT_SECRET` | Your Civic Auth client secret |
+| `CIVIC_CLIENT_ID` | Your Civic Auth client ID |
+| `CIVIC_CLIENT_SECRET` | Your Civic Auth client secret |
 | `MCP_SERVER_URL` | Civic Nexus MCP endpoint (default: `https://nexus.civic.com/mcp`) |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
 | `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |

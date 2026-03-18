@@ -177,8 +177,8 @@ The demo caches `NexusClient` instances per user to avoid repeated token exchang
 | `JWT_PUBLIC_KEY` | RSA public key for JWT verification |
 | `JWT_PRIVATE_KEY` | RSA private key for JWT signing |
 | `CIVIC_AUTH_URL` | Civic Auth endpoint (default: `https://auth.civic.com/oauth`) |
-| `CIVIC_AUTH_CLIENT_ID` | Your Civic Auth client ID |
-| `CIVIC_AUTH_CLIENT_SECRET` | Your Civic Auth client secret |
+| `CIVIC_CLIENT_ID` | Your Civic Auth client ID |
+| `CIVIC_CLIENT_SECRET` | Your Civic Auth client secret |
 | `MCP_SERVER_URL` | Civic Nexus MCP endpoint (default: `https://nexus.civic.com/mcp`) |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
 | `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
