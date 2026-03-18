@@ -87,6 +87,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 
     debugAPI(`Creating new Nexus client for user ${userId}`);
     const client = new CivicMcpClient({
+      url: process.env.MCP_SERVER_URL,
       auth: {
         token: civicToken.accessToken,
       },

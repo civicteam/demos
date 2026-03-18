@@ -45,6 +45,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
     // Civic Auth tokens are directly valid for the MCP endpoint
     // The middleware handles token refresh, we just need to get the current token
     const client = new CivicMcpClient({
+      url: process.env.MCP_SERVER_URL,
       auth: {
         token: (user as Record<string, unknown>).idToken as string || "",
       },
