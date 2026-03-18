@@ -1,16 +1,16 @@
 import type { ToolSet } from "ai";
 import { debugAPI } from "@/lib/debug";
 import { auth } from "@/auth";
-import { NexusClient } from "@civic/nexus-client";
-import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
+import { CivicMcpClient } from "@civic/mcp-client";
+import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { cookies } from "next/headers";
 
 interface CachedClient {
-  client: NexusClient;
+  client: CivicMcpClient;
   lastUsed: number;
 }
 
-// Cache of Nexus clients by user ID
+// Cache of MCP clients by user ID
 const clientCache = new Map<string, CachedClient>();
 
 // Timeout for client inactivity in milliseconds (60 minutes)
@@ -28,18 +28,18 @@ async function getSessionToken(): Promise<string | null> {
 }
 
 /**
- * Get or create a Nexus client for the specified user ID.
+ * Get or create an MCP client for the specified user ID.
  * Clients are cached and reused for subsequent requests.
- * Token exchange is handled internally by the NexusClient.
+ * Token exchange is handled internally by the CivicMcpClient.
  */
-export async function getNexusClient(): Promise<NexusClient | null> {
+export async function getMcpClient(): Promise<CivicMcpClient | null> {
   try {
     // Get the current authenticated user
     const session = await auth();
 
     // If no user is logged in, don't create a client
     if (!session?.user?.id) {
-      debugAPI("No authenticated user found, not creating Nexus client");
+      debugAPI("No authenticated user found, not creating MCP client");
       return null;
     }
 
@@ -48,7 +48,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
     // Check if we already have a cached client for this user
     const cachedEntry = clientCache.get(userId);
     if (cachedEntry) {
-      debugAPI(`Using cached Nexus client for user ${userId}`);
+      debugAPI(`Using cached MCP client for user ${userId}`);
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
@@ -60,10 +60,10 @@ export async function getNexusClient(): Promise<NexusClient | null> {
       return null;
     }
 
-    // Create a new Nexus client with token exchange handled by the client
-    debugAPI(`Creating new Nexus client for user ${userId}`);
+    // Create a new MCP client with token exchange handled by the client
+    debugAPI(`Creating new MCP client for user ${userId}`);
 
-    const client = new NexusClient({
+    const client = new CivicMcpClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
         tokenExchange: {
@@ -72,11 +72,7 @@ export async function getNexusClient(): Promise<NexusClient | null> {
           subjectToken: getSessionToken as () => Promise<string>,
         },
       },
-      civicAccount: process.env.CIVIC_ACCOUNT_ID,
       civicProfile: process.env.CIVIC_PROFILE_ID,
-      headers: {
-        "x-civic-profile": "default", // TODO: remove once x-civic-profile-id is rolled out in production
-      },
       capabilities: {
         experimental: {
           "civic:rest-auth": { version: "1.0" },
@@ -92,21 +88,21 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
     return client;
   } catch (error) {
-    debugAPI("Error getting Nexus client for user:", error);
+    debugAPI("Error getting MCP client for user:", error);
     return null;
   }
 }
 
 /**
- * Get tools for the current user session using the Nexus client.
+ * Get tools for the current user session using the MCP client.
  * Returns tools adapted for the Vercel AI SDK.
  */
 export async function getTools(): Promise<ToolSet> {
   try {
-    const client = await getNexusClient();
+    const client = await getMcpClient();
 
     if (!client) {
-      debugAPI("No authenticated user or Nexus client available, returning empty tools");
+      debugAPI("No authenticated user or MCP client available, returning empty tools");
       return {};
     }
 
@@ -115,7 +111,7 @@ export async function getTools(): Promise<ToolSet> {
 
     return tools as ToolSet;
   } catch (error) {
-    debugAPI("Error getting Nexus tools:", error);
+    debugAPI("Error getting MCP tools:", error);
     return {};
   }
 }
@@ -123,16 +119,16 @@ export async function getTools(): Promise<ToolSet> {
 /**
  * Remove a specific user's client from the cache and close the connection
  */
-export async function closeNexusClient(userId: string): Promise<void> {
+export async function closeMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
     try {
       await cachedEntry.client.close();
     } catch (error) {
-      debugAPI(`Error closing Nexus client for user ${userId}:`, error);
+      debugAPI(`Error closing MCP client for user ${userId}:`, error);
     }
     clientCache.delete(userId);
-    debugAPI(`Removed Nexus client for user ${userId} from cache`);
+    debugAPI(`Removed MCP client for user ${userId} from cache`);
   }
 }
 
@@ -148,10 +144,10 @@ export async function cleanupInactiveClients(): Promise<void> {
     .map(([userId]) => userId);
 
   // Close and remove inactive clients
-  await Promise.all(inactiveUserIds.map(closeNexusClient));
+  await Promise.all(inactiveUserIds.map(closeMcpClient));
 
   if (inactiveUserIds.length > 0) {
-    debugAPI(`Cleaned up ${inactiveUserIds.length} inactive Nexus clients`);
+    debugAPI(`Cleaned up ${inactiveUserIds.length} inactive MCP clients`);
   }
 }
 
@@ -175,6 +171,6 @@ if (typeof window === "undefined") {
   if (!cleanupInterval) {
     const CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 minutes
     cleanupInterval = setInterval(cleanupInactiveClients, CLEANUP_INTERVAL);
-    debugAPI("Registered Nexus client cleanup interval");
+    debugAPI("Registered MCP client cleanup interval");
   }
 }
