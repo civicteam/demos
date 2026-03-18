@@ -12,46 +12,84 @@ Google OAuth + Civic Auth token exchange demo -- the simplest token exchange flo
 ## Prerequisites
 
 - Node.js 18+
-- A **Google Cloud project** with OAuth 2.0 credentials (Web application type)
-  - Authorized redirect URI: `http://localhost:3025/api/auth/callback/google`
-- A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com)) with token exchange configured (see below)
+- A **Google Cloud project** with OAuth 2.0 credentials (see Step 1 below)
+- A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com)) with token exchange configured (see Step 2 below)
 - A Civic Nexus organization linked to your Civic Auth app
 - An **Anthropic API key**
 
-### Configure Token Exchange in Civic Auth
+## Setup
+
+### Step 1: Create Google OAuth Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create or select a project
+3. Navigate to **APIs & Services > Credentials** (or search "Credentials" in the top search bar)
+4. Click **+ CREATE CREDENTIALS > OAuth client ID**
+5. If prompted, configure the **OAuth consent screen** first:
+   - Choose **External** user type
+   - Fill in the app name (e.g., "Nexus Google Auth Demo") and your email
+   - You can skip scopes and test users for now
+   - Click through to finish
+6. Back on **Create OAuth client ID**:
+   - **Application type:** Web application
+   - **Name:** anything (e.g., "Nexus Google Auth Demo")
+   - **Authorized JavaScript origins:** `http://localhost:3025`
+   - **Authorized redirect URIs:** `http://localhost:3025/api/auth/callback/google`
+   - Click **Create**
+7. Copy the **Client ID** (looks like `123456789-xxxxx.apps.googleusercontent.com`) and **Client Secret**
+
+### Step 2: Configure Token Exchange in Civic Auth
 
 In your Civic Auth application settings:
 
 1. Navigate to **Setup > Token Exchange > Add Provider**
-2. Select the **Google** preset — this auto-fills the issuer and JWKS fields:
+2. Select the **Google** preset -- this auto-fills the Issuer URL and JWKS URI fields
+3. Fill in the **Audience** field with your Google OAuth Client ID from Step 1
+4. Click **Save provider**
 
 | Field | Value | Notes |
 |-------|-------|-------|
 | **Issuer URL** | `https://accounts.google.com` | Auto-filled by Google preset |
-| **JWKS URL** | `https://www.googleapis.com/oauth2/v3/certs` | Auto-filled by Google preset |
-| **Audience** | Your `GOOGLE_CLIENT_ID` | Must match the Google OAuth client ID used by this app |
-| **Algorithm** | `RS256` | |
+| **JWKS URI** | `https://www.googleapis.com/oauth2/v3/certs` | Auto-filled by Google preset |
+| **Audience** | Your `GOOGLE_CLIENT_ID` | The Client ID from Step 1 |
+| **Algorithm** | `RS256` | Default |
 
-> **Note**: No custom signing or JWKS hosting is needed — Google's ID tokens are standard RS256 JWTs verified against Google's public JWKS endpoint.
+> **Note**: No custom signing or JWKS hosting is needed -- Google's ID tokens are standard RS256 JWTs verified against Google's public JWKS endpoint.
 
-## Setup
+### Step 3: Configure Environment Variables
 
-1. Copy `.env.example` to `.env.local` and fill in the values:
+1. Copy `.env.example` to `.env`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Fill in the values:
+
+   ```
+   NEXTAUTH_URL=http://localhost:3025
+   NEXTAUTH_SECRET=<generate with: openssl rand -base64 32>
+
+   GOOGLE_CLIENT_ID=<your Google client ID from Step 1>
+   GOOGLE_CLIENT_SECRET=<your Google client secret from Step 1>
+
+   CIVIC_AUTH_URL=https://auth.civic.com/oauth
+   CIVIC_AUTH_CLIENT_ID=<your Civic Auth client ID>
+   CIVIC_AUTH_CLIENT_SECRET=<your Civic Auth client secret>
+
+   MCP_SERVER_URL=https://nexus.civic.com/mcp
+   ANTHROPIC_API_KEY=<your Anthropic API key>
+   ```
+
+### Step 4: Install and Run
 
 ```bash
-cp .env.example .env.local
+pnpm install
+pnpm dev:google-auth
 ```
 
-2. Install dependencies:
+Open [http://localhost:3025](http://localhost:3025) and click "Sign in with Google".
 
-```bash
-npm install
-```
+## Port
 
-3. Run the development server:
-
-```bash
-npm run dev
-```
-
-The app runs on **port 3025**: [http://localhost:3025](http://localhost:3025)
+This app runs on port **3025**.
