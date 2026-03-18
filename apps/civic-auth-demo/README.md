@@ -9,8 +9,10 @@ This app uses `@civic/auth` as the identity provider. Unlike federated auth flow
 ## Prerequisites
 
 - A Civic Auth client ID (from [auth.civic.com](https://auth.civic.com))
-- Your Nexus organization linked to your Civic Auth app
+- A Civic Nexus organization linked to your Civic Auth app (via **Settings > Integration** in your Nexus org)
 - An Anthropic API key
+
+> **No token exchange configuration needed** — since Civic Auth is the identity provider, the tokens it issues are directly valid for the Nexus MCP endpoint. No issuer, JWKS, or audience setup required.
 
 ## Setup
 

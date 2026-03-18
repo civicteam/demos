@@ -43,20 +43,19 @@ This demo application shows how to integrate a custom authentication system with
 
 In your Civic Auth application settings, configure the Token Exchange feature:
 
-1. Navigate to the **Token Exchange** section
-2. Add a new token exchange provider with your app's details:
+1. Navigate to **Setup > Token Exchange > Add Provider**
+2. Select **Custom** provider and configure:
 
-| Field | Value |
-|-------|-------|
-| **Issuer** | Your app's URL (e.g., `https://your-app.example.com`) |
-| **Audience** | `civic-mcp` |
-| **Algorithm** | `RS256` |
+| Field | Value | Notes |
+|-------|-------|-------|
+| **Issuer URL** | `https://localhost:3000` | Must match the `ISSUER` constant in `app/lib/auth/jwt.ts` |
+| **Audience** | `civic-mcp` | Must match the `AUDIENCE` constant in `app/lib/auth/jwt.ts` |
+| **Algorithm** | `RS256` | |
+| **JWKS URL** | `http://localhost:3023/api/keys/.well-known/jwks.json` | Exposed by the app (see `app/api/keys/.well-known/jwks.json/route.ts`) |
 
-3. Provide your public key using one of these methods:
-   - **JWKS URL**: `https://your-app.example.com/api/keys/.well-known/jwks.json`
-   - **PEM**: Paste your public key directly
+Alternatively, instead of the JWKS URL, you can paste your **public key PEM** directly (the value of `JWT_PUBLIC_KEY` from your `.env`).
 
-> **Note**: The issuer and audience must match exactly what your app includes in its JWT claims.
+> **Note**: The issuer and audience values are hardcoded in `app/lib/auth/jwt.ts`. If you change them, you must also update the Civic Auth token exchange configuration to match.
 
 ### Step 3: Create a Civic Nexus Organization
 

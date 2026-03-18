@@ -12,8 +12,25 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 ## Prerequisites
 
 - Node.js 18+
-- A Civic Auth app configured for token exchange, with your JWKS endpoint set to `http://localhost:3023/api/auth/jwks`
+- A Civic Auth app (from [auth.civic.com](https://auth.civic.com)) with token exchange configured (see below)
+- A Civic Nexus organization linked to your Civic Auth app
 - An Anthropic API key
+
+### Configure Token Exchange in Civic Auth
+
+In your Civic Auth application settings:
+
+1. Navigate to **Setup > Token Exchange > Add Provider**
+2. Select **Custom** provider and configure:
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| **Issuer URL** | `http://localhost:3023` | Matches `BETTER_AUTH_URL` — Better Auth uses the app URL as the JWT `iss` claim |
+| **Audience** | `http://localhost:3023` | Better Auth defaults the `aud` claim to the app URL |
+| **Algorithm** | `RS256` | |
+| **JWKS URL** | `http://localhost:3023/api/auth/jwks` | Exposed automatically by Better Auth's JWT plugin |
+
+> **Note**: Better Auth's JWT plugin manages key generation and rotation automatically. The JWKS endpoint publishes the public keys — no manual key management needed.
 
 ## Setup
 
