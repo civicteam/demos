@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getNexusClient } from "@/lib/ai/mcp";
+import { getMcpClient } from "@/lib/ai/mcp";
 import { debugAPI } from "@/lib/debug";
 
 export interface McpStatusResponse {
@@ -32,13 +32,13 @@ export async function GET(): Promise<Response> {
       return Response.json(status);
     }
 
-    // Try to get a Nexus client (handles token exchange internally)
+    // Try to get an MCP client (handles token exchange internally)
     try {
-      const client = await getNexusClient();
+      const client = await getMcpClient();
 
       if (!client) {
-        debugAPI("[mcp/status] Could not create Nexus client");
-        status.tokenExchange = { status: "failed", error: "Could not create Nexus client" };
+        debugAPI("[mcp/status] Could not create MCP client");
+        status.tokenExchange = { status: "failed", error: "Could not create MCP client" };
         return Response.json(status);
       }
 
@@ -63,8 +63,6 @@ export async function GET(): Promise<Response> {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            "x-civic-profile": "default", // TODO: remove once x-civic-profile-id is rolled out in production
-            ...(process.env.CIVIC_PROFILE_ID && { "x-civic-profile-id": process.env.CIVIC_PROFILE_ID }),
           },
         });
 
