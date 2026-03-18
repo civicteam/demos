@@ -17,7 +17,7 @@ import { DefaultChatTransport } from "ai";
 const modelOptions = [
   // { value: 'bedrock', label: 'AWS Bedrock (Claude 3.5 Sonnet)' },
   // { value: 'openai', label: 'OpenAI (GPT 4o)' },
-  { value: "anthropic", label: "Anthropic (Claude 3.7 Sonnet)" },
+  { value: "anthropic", label: "Anthropic (Claude Sonnet 4.6)" },
   // { value: 'ollama', label: 'Ollama (Deepseek R1 32b Distill) - LOCAL ONLY' },
 ];
 
