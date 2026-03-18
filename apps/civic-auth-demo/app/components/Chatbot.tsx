@@ -2,7 +2,6 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useState, useRef } from "react";
-import { useCivicAuth } from "../hooks/useCivicAuth";
 import { MessageContent } from "./MessageContent";
 import SuggestionButton from "./SuggestionButton";
 import { ToolCommands } from "./ToolCommands";
@@ -36,7 +35,6 @@ export default function Chatbot() {
   });
 
   const aiIsTyping = status === "streaming" || status === "submitted";
-  useCivicAuth(aiIsTyping);
 
   const hasToolInvocations = messages.some((message) =>
     message.parts?.some((part) => part.type === "tool-invocation"),

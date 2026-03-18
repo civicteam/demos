@@ -2,11 +2,8 @@ import type { ModelMessage, UIMessage } from "ai";
 import { stepCountIs, streamText } from "ai";
 import { preprocessMessages } from "@/lib/message";
 import { models } from "@/lib/ai/llm";
-import { getTools, getNexusClient } from "@/lib/ai/mcp";
-import { wrapToolsWithCivicAuth } from "@/lib/ai/civic-rest-auth";
-import { handleCacheInvalidationForStep } from "@/lib/ai/cache-invalidation";
+import { getTools } from "@/lib/ai/mcp";
 import { debugAPI } from "@/lib/debug";
-import { headers } from "next/headers";
 
 function convertToModelMessages(messages: UIMessage[]): ModelMessage[] {
   return messages.map((msg) => {
@@ -21,21 +18,6 @@ function convertToModelMessages(messages: UIMessage[]): ModelMessage[] {
     }
     return msg as unknown as ModelMessage;
   });
-}
-
-async function getSessionUser(): Promise<{ id: string } | null> {
-  try {
-    const headersList = await headers();
-    const cookie = headersList.get("cookie") || "";
-    const res = await fetch(`${process.env.BETTER_AUTH_URL || "http://localhost:3023"}/api/auth/get-session`, {
-      headers: { cookie },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.user ? { id: data.user.id } : null;
-  } catch {
-    return null;
-  }
 }
 
 export async function POST(req: Request) {
@@ -53,17 +35,8 @@ export async function POST(req: Request) {
   debugAPI("Chat request: model=%s", model.modelId);
   preprocessMessages(messages);
 
-  const user = await getSessionUser();
-  const rawTools = await getTools();
-  debugAPI("Loaded Nexus tools:", Object.keys(rawTools));
-
-  let tools = rawTools;
-  if (user) {
-    const nexusClient = await getNexusClient();
-    if (nexusClient) {
-      tools = wrapToolsWithCivicAuth(rawTools, nexusClient, user.id);
-    }
-  }
+  const tools = await getTools();
+  debugAPI("Loaded Nexus tools:", Object.keys(tools));
 
   try {
     const result = streamText({
@@ -74,9 +47,6 @@ export async function POST(req: Request) {
         "When answering a question, make sure to respond to the user after at most 5 tool calls," +
         "let them know what you know so far, and what you plan to do next, and wait for further instructions.",
       tools,
-      onStepFinish: (stepResult) => {
-        handleCacheInvalidationForStep(stepResult, user);
-      },
       stopWhen: stepCountIs(10),
       onError: ({ error }) => {
         debugAPI("streamText error: %o", error);

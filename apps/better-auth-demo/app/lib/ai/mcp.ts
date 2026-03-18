@@ -94,11 +94,6 @@ export async function getNexusClient(): Promise<NexusClient | null> {
       headers: {
         "x-civic-profile": "default",
       },
-      capabilities: {
-        experimental: {
-          "civic:rest-auth": { version: "1.0" },
-        },
-      },
     });
 
     clientCache.set(userId, {
@@ -144,13 +139,6 @@ export async function cleanupInactiveClients(): Promise<void> {
     .filter(([, { lastUsed }]) => now - lastUsed > INACTIVITY_TIMEOUT)
     .map(([userId]) => userId);
   await Promise.all(inactiveUserIds.map(closeNexusClient));
-}
-
-export function getCivicAuthToken(userId: string): string | null {
-  const cachedEntry = clientCache.get(userId);
-  if (!cachedEntry) return null;
-  const token = cachedEntry.client.getConfig().auth.token;
-  return typeof token === "string" ? token : null;
 }
 
 let cleanupInterval: NodeJS.Timeout | null = null;
