@@ -4,12 +4,10 @@ import { auth } from "@/auth";
 import { NexusClient } from "@civic/nexus-client";
 import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
 import { cookies } from "next/headers";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
 
 interface CachedClient {
   client: NexusClient;
   lastUsed: number;
-  civicTokenExpiry: Date;
 }
 
 // Cache of Nexus clients by user ID
@@ -32,7 +30,7 @@ async function getSessionToken(): Promise<string | null> {
 /**
  * Get or create a Nexus client for the specified user ID.
  * Clients are cached and reused for subsequent requests.
- * Performs token exchange to get a Civic access token.
+ * Token exchange is handled internally by the NexusClient.
  */
 export async function getNexusClient(): Promise<NexusClient | null> {
   try {
@@ -47,40 +45,35 @@ export async function getNexusClient(): Promise<NexusClient | null> {
 
     const userId = session.user.id;
 
-    // Check if we already have a cached client for this user with valid Civic token
+    // Check if we already have a cached client for this user
     const cachedEntry = clientCache.get(userId);
-    if (cachedEntry && cachedEntry.civicTokenExpiry > new Date()) {
+    if (cachedEntry) {
       debugAPI(`Using cached Nexus client for user ${userId}`);
-      // Update the last used timestamp
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
 
-    // Close expired client if exists
-    if (cachedEntry) {
-      debugAPI(`Civic token expired for user ${userId}, refreshing...`);
-      await closeNexusClient(userId);
-    }
-
-    // Get the session JWT token
-    const sessionToken = await getSessionToken();
-    if (!sessionToken) {
-      debugAPI("No session token found, cannot exchange for Civic token");
+    const clientId = process.env.CIVIC_AUTH_CLIENT_ID;
+    const clientSecret = process.env.CIVIC_AUTH_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      debugAPI("CIVIC_AUTH_CLIENT_ID and CIVIC_AUTH_CLIENT_SECRET are required");
       return null;
     }
 
-    // Exchange our JWT for a Civic access token
-    debugAPI("Exchanging JWT for Civic access token");
-    const civicToken = await exchangeTokenForCivic(sessionToken);
-
-    // Create a new Nexus client for this user with the Civic token
+    // Create a new Nexus client with token exchange handled by the client
     debugAPI(`Creating new Nexus client for user ${userId}`);
 
     const client = new NexusClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
-        token: civicToken.accessToken,
+        tokenExchange: {
+          clientId,
+          clientSecret,
+          subjectToken: getSessionToken as () => Promise<string>,
+        },
       },
+      // civicAccount: "e89bc6b5-12d7-4df7-9204-bc8c968f630b",
+      // civicProfile: "26d15643-82ad-41a4-95d3-168e23f1fe6f",
       headers: {
         "x-civic-profile": "default",
       },
@@ -91,11 +84,10 @@ export async function getNexusClient(): Promise<NexusClient | null> {
       },
     });
 
-    // Cache the client with Civic token expiry
+    // Cache the client
     clientCache.set(userId, {
       client,
       lastUsed: Date.now(),
-      civicTokenExpiry: civicToken.expiresAt,
     });
 
     return client;
@@ -169,8 +161,7 @@ export async function cleanupInactiveClients(): Promise<void> {
 export function getCivicAuthToken(userId: string): string | null {
   const cachedEntry = clientCache.get(userId);
   if (!cachedEntry) return null;
-  const token = cachedEntry.client.getConfig().auth.token;
-  return typeof token === "string" ? token : null;
+  return cachedEntry.client.getAccessToken() ?? null;
 }
 
 // Set up periodic cleanup of inactive clients (every 15 minutes)
