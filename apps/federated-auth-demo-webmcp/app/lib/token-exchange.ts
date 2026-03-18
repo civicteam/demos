@@ -17,12 +17,12 @@ export interface TokenExchangeResponse {
 
 function getConfig(): TokenExchangeConfig {
   const civicAuthUrl = process.env.CIVIC_AUTH_URL || "https://auth.civic.com/oauth";
-  const clientId = process.env.CIVIC_AUTH_CLIENT_ID;
-  const clientSecret = process.env.CIVIC_AUTH_CLIENT_SECRET;
+  const clientId = process.env.CIVIC_CLIENT_ID;
+  const clientSecret = process.env.CIVIC_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      "CIVIC_AUTH_CLIENT_ID and CIVIC_AUTH_CLIENT_SECRET are required for token exchange",
+      "CIVIC_CLIENT_ID and CIVIC_CLIENT_SECRET are required for token exchange",
     );
   }
 

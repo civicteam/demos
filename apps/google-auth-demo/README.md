@@ -74,8 +74,8 @@ In your Civic Auth application settings:
    GOOGLE_CLIENT_SECRET=<your Google client secret from Step 1>
 
    CIVIC_AUTH_URL=https://auth.civic.com/oauth
-   CIVIC_AUTH_CLIENT_ID=<your Civic Auth client ID>
-   CIVIC_AUTH_CLIENT_SECRET=<your Civic Auth client secret>
+   CIVIC_CLIENT_ID=<your Civic Auth client ID>
+   CIVIC_CLIENT_SECRET=<your Civic Auth client secret>
 
    MCP_SERVER_URL=https://nexus.civic.com/mcp
    ANTHROPIC_API_KEY=<your Anthropic API key>

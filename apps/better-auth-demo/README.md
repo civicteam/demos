@@ -53,8 +53,8 @@ In your Civic Auth application settings:
    BETTER_AUTH_URL=http://localhost:3023
 
    CIVIC_AUTH_URL=https://auth.civic.com/oauth
-   CIVIC_AUTH_CLIENT_ID=<your Civic Auth client ID>
-   CIVIC_AUTH_CLIENT_SECRET=<your Civic Auth client secret>
+   CIVIC_CLIENT_ID=<your Civic Auth client ID>
+   CIVIC_CLIENT_SECRET=<your Civic Auth client secret>
 
    MCP_SERVER_URL=https://nexus.civic.com/mcp
    ANTHROPIC_API_KEY=<your Anthropic API key>
