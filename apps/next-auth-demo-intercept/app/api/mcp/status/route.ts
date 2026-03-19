@@ -50,16 +50,9 @@ export async function GET(): Promise<Response> {
         accessToken: client.getAccessToken(),
       };
 
-      // Try to connect to MCP
-      const mcpServerUrl = process.env.MCP_SERVER_URL;
-      if (!mcpServerUrl) {
-        status.mcp = { connected: false, error: "MCP_SERVER_URL not configured" };
-        return Response.json(status);
-      }
-
       // Simple connectivity check - just verify the server is reachable and auth works
       try {
-        const mcpResponse = await fetch(mcpServerUrl, {
+        const mcpResponse = await fetch("https://app.civic.com/mcp", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

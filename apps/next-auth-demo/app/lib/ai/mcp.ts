@@ -53,10 +53,10 @@ export async function getMcpClient(): Promise<CivicMcpClient | null> {
       return cachedEntry.client;
     }
 
-    const clientId = process.env.CIVIC_AUTH_CLIENT_ID;
-    const clientSecret = process.env.CIVIC_AUTH_CLIENT_SECRET;
+    const clientId = process.env.CIVIC_CLIENT_ID;
+    const clientSecret = process.env.CIVIC_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
-      debugAPI("CIVIC_AUTH_CLIENT_ID and CIVIC_AUTH_CLIENT_SECRET are required");
+      debugAPI("CIVIC_CLIENT_ID and CIVIC_CLIENT_SECRET are required");
       return null;
     }
 
@@ -64,7 +64,6 @@ export async function getMcpClient(): Promise<CivicMcpClient | null> {
     debugAPI(`Creating new MCP client for user ${userId}`);
 
     const client = new CivicMcpClient({
-      url: process.env.MCP_SERVER_URL,
       auth: {
         tokenExchange: {
           clientId,

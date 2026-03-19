@@ -2,7 +2,8 @@ import * as jose from "jose";
 import type { JWT, JWTEncodeParams, JWTDecodeParams } from "next-auth/jwt";
 import { getPrivateKey, getPublicKey } from "./keys";
 
-const ISSUER = "https://localhost:3000";
+// The issuer must use https — Civic Auth token exchange requires an SSL iss field
+const ISSUER = process.env.NEXTAUTH_URL?.replace("http://", "https://") ?? "https://localhost:3021";
 const AUDIENCE = "civic-mcp";
 
 export async function encodeJwt(params: JWTEncodeParams): Promise<string> {
