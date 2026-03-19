@@ -16,7 +16,8 @@ pnpm install
 |-----|-------------|
 | [civic-auth-demo](./apps/civic-auth-demo) | Simplest integration — Civic Auth tokens work directly with Civic MCP, no token exchange needed |
 | [google-auth-demo](./apps/google-auth-demo) | Google OAuth + Civic token exchange with no custom JWT signing required |
-| [federated-auth-demo](./apps/federated-auth-demo) | Auth.js with custom RS256 JWT signing and token exchange; supports multiple LLM providers |
+| [next-auth-demo](./apps/next-auth-demo) | Auth.js with custom RS256 JWT signing and token exchange; supports multiple LLM providers |
+| [next-auth-demo-intercept](./apps/next-auth-demo-intercept) | Like next-auth-demo but with civic:rest-auth tool wrapping for transparent auth interception |
 | [federated-auth-demo-webmcp](./apps/federated-auth-demo-webmcp) | Like federated-auth-demo but uses the MCP SDK directly (WebMCP) instead of a higher-level client |
 | [better-auth-demo](./apps/better-auth-demo) | Better Auth with an OIDC provider plugin for JWT generation and Civic token exchange; runs over local HTTPS |
 
@@ -30,9 +31,13 @@ A Next.js application using [Civic Auth](https://www.civic.com/) as the identity
 
 A Next.js application using NextAuth v5 with Google OAuth. Google ID tokens (RS256-signed) are exchanged directly for Civic access tokens via OAuth 2.0 Token Exchange (RFC 8693), so no custom JWT infrastructure is needed.
 
-### [federated-auth-demo](./apps/federated-auth-demo)
+### [next-auth-demo](./apps/next-auth-demo)
 
 A Next.js application using Auth.js (NextAuth v5) with a custom RS256-signed JWT and a JWKS endpoint. The app exchanges its own JWTs for Civic access tokens and includes an AI chat interface with support for multiple LLM providers (Anthropic, OpenAI, Amazon Bedrock, Ollama).
+
+### [next-auth-demo-intercept](./apps/next-auth-demo-intercept)
+
+Like next-auth-demo but adds civic:rest-auth capability and tool wrapping to transparently intercept and handle OAuth2 authorization flows during tool execution. When a tool requires user authorization, it automatically manages the auth popup flow without the LLM needing to know about it.
 
 ### [federated-auth-demo-webmcp](./apps/federated-auth-demo-webmcp)
 

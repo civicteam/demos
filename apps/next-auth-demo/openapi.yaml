@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: Civic MCP Whitelabel Web App API
+  description: |
+    Whitelabel web application for AI chat interfaces with MCP integration.
+    This Next.js app provides customizable AI chat functionality.
+  version: 1.0.0
+  contact:
+    name: Civic Technologies
+    url: https://civic.com
+
+servers:
+  - url: http://localhost:{port}
+    description: Local development server
+    variables:
+      port:
+        default: '3005'
+        description: Port number where the Whitelabel Web App is running
+  - url: https://app-dev.civic.com/demo
+    description: Development environment
+  - url: https://app-preprod.civic.com/demo
+    description: Pre-production environment
+  - url: https://app.civic.com/demo
+    description: Production environment
+
+paths:
+  /api/chat:
+    post:
+      summary: Send Chat Message
+      description: Send a message to the AI chat and receive a streaming response
+      operationId: sendChatMessage
+      tags:
+        - Chat
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant, system]
+                      content:
+                        type: string
+                    required:
+                      - role
+                      - content
+                  description: Chat message history
+                model:
+                  type: string
+                  description: AI model to use (e.g., "gpt-4", "claude-3")
+                  default: "gpt-4"
+                temperature:
+                  type: number
+                  minimum: 0
+                  maximum: 2
+                  default: 0.7
+                  description: Sampling temperature
+                maxTokens:
+                  type: integer
+                  minimum: 1
+                  description: Maximum tokens to generate
+                stream:
+                  type: boolean
+                  default: true
+                  description: Whether to stream the response
+              required:
+                - messages
+      responses:
+        '200':
+          description: Chat response (streaming or complete)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events stream with AI responses
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum: [assistant]
+                  content:
+                    type: string
+                  model:
+                    type: string
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: integer
+                      completion_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/{...civicauth}:
+    get:
+      summary: Civic Auth Callback
+      description: OAuth callback endpoint for Civic authentication
+      operationId: civicAuthCallback
+      tags:
+        - Authentication
+      parameters:
+        - name: civicauth
+          in: path
+          required: true
+          description: Civic auth path segments
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect after authentication
+        '400':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Civic Auth Token Exchange
+      description: Exchange authorization code for access token
+      operationId: civicAuthTokenExchange
+      tags:
+        - Authentication
+      parameters:
+        - name: civicauth
+          in: path
+          required: true
+          description: Civic auth path segments
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                code_verifier:
+                  type: string
+              required:
+                - code
+      responses:
+        '200':
+          description: Token exchange successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Chat
+    description: AI chat endpoints
+  - name: Authentication
+    description: Civic authentication endpoints
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - error
+
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - role
+        - content
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Civic Auth JWT token
+
+security: []
