@@ -1,4 +1,4 @@
-# civic-demo
+# Civic Demos
 
 Demo projects showcasing Civic integrations.
 
