@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { withBasePath } from "../../lib/utils";
 
 interface CivicAuthState {
   isPending: boolean;
@@ -24,7 +23,7 @@ export function useCivicAuth(isStreaming: boolean): CivicAuthState {
     const poll = async () => {
       while (!cancelled) {
         try {
-          const res = await fetch(withBasePath("/api/civic-auth/pending"));
+          const res = await fetch("/api/civic-auth/pending");
           if (cancelled) break;
 
           const data = (await res.json()) as { status: string; authUrl?: string };
@@ -33,7 +32,6 @@ export function useCivicAuth(isStreaming: boolean): CivicAuthState {
             setIsPending(true);
             setAuthUrl(data.authUrl);
 
-            // Auto-open popup once per unique URL
             if (openedUrlRef.current !== data.authUrl) {
               openedUrlRef.current = data.authUrl;
               window.open(data.authUrl, "_blank");
@@ -46,7 +44,6 @@ export function useCivicAuth(isStreaming: boolean): CivicAuthState {
           // Silently continue polling
         }
 
-        // Wait before next poll
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     };
