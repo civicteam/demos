@@ -171,7 +171,7 @@ async function pollForApproval(
  */
 async function handleAuthFlow(
   authFields: CivicAuthFields,
-  nexusClient: CivicMcpClient,
+  civicClient: CivicMcpClient,
   userId: string,
   civicToken: string,
 ): Promise<unknown> {
@@ -221,7 +221,7 @@ async function handleAuthFlow(
   debugAPI("[civic-rest-auth] Auth approved for user %s, calling continue_job with jobId: %s", userId, continueJobId);
 
   try {
-    const continueResult = await nexusClient.callTool("continue_job", { params: { jobId: continueJobId } });
+    const continueResult = await civicClient.callTool("continue_job", { params: { jobId: continueJobId } });
     return continueResult;
   } catch (err) {
     debugAPI("[civic-rest-auth] Error calling continue_job:", err);
@@ -241,7 +241,7 @@ async function handleAuthFlow(
  */
 export function wrapToolsWithCivicAuth(
   tools: ToolSet,
-  nexusClient: CivicMcpClient,
+  civicClient: CivicMcpClient,
   userId: string,
 ): ToolSet {
   const wrapped: ToolSet = {};
@@ -268,7 +268,7 @@ export function wrapToolsWithCivicAuth(
         if (!authFields) break;
 
         debugAPI("[civic-rest-auth] Intercepted auth response for tool \"%s\" (iteration %d)", name, i + 1);
-        result = await handleAuthFlow(authFields, nexusClient, userId, civicToken);
+        result = await handleAuthFlow(authFields, civicClient, userId, civicToken);
       }
 
       return result;

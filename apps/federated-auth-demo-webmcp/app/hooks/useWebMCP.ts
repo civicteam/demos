@@ -54,7 +54,7 @@ export function useWebMCP(): WebMCPState {
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<Array<{ name: string; description: string }>>([]);
   const [log, setLog] = useState<McpLogEntry[]>([]);
-  const nexusRef = useRef<CivicMcpClient | null>(null);
+  const civicRef = useRef<CivicMcpClient | null>(null);
   const registeredToolNamesRef = useRef<string[]>([]);
   const initializingRef = useRef<AbortController | null>(null);
 
@@ -69,9 +69,9 @@ export function useWebMCP(): WebMCPState {
     setIsRegistered(false);
     setTools([]);
 
-    if (nexusRef.current) {
-      await nexusRef.current.close();
-      nexusRef.current = null;
+    if (civicRef.current) {
+      await civicRef.current.close();
+      civicRef.current = null;
     }
   }, []);
 
@@ -105,18 +105,18 @@ export function useWebMCP(): WebMCPState {
 
       console.log("[WebMCP] Connecting to", mcpUrl);
 
-      // 2. Create CivicMcpClient pointing directly at Nexus Hub
-      const nexus = new CivicMcpClient({
+      // 2. Create CivicMcpClient pointing directly at Civic Hub
+      const civicClient = new CivicMcpClient({
         url: mcpUrl,
         auth: { token: accessToken },
         headers: {
           "x-civic-profile": "default",
         },
       });
-      nexusRef.current = nexus;
+      civicRef.current = civicClient;
 
       // 3. Bootstrap MCP connection + get tools (adapter creates the transport)
-      const mcpTools = await nexus.getTools(anthropicAdapter());
+      const mcpTools = await civicClient.getTools(anthropicAdapter());
 
       console.log("[WebMCP] Got tools:", mcpTools.length, mcpTools.map((t: { name: string }) => t.name));
 
@@ -147,7 +147,7 @@ export function useWebMCP(): WebMCPState {
             setLog((prev) => [...prev, entry]);
 
             try {
-              const result = await nexus.callTool(tool.name, args);
+              const result = await civicClient.callTool(tool.name, args);
               setLog((prev) =>
                 prev.map((e) =>
                   e.id === entryId

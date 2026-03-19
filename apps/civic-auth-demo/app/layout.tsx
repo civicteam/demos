@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Civic Auth Demo",
-  description: "Civic Auth + Civic Nexus Demo",
+  description: "Civic Auth + Civic Demo",
 };
 
 export default function RootLayout({

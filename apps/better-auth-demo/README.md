@@ -1,6 +1,6 @@
 # Better Auth Demo
 
-A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT + OIDC Provider plugins for token exchange with Civic Auth, connecting to Civic Nexus MCP for AI chat.
+A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT + OIDC Provider plugins for token exchange with Civic Auth, connecting to Civic MCP for AI chat.
 
 ## How It Works
 
@@ -8,7 +8,7 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 2. Better Auth's JWT plugin issues RS256-signed JWTs and exposes a JWKS endpoint at `/api/auth/jwks`
 3. The app exchanges the Better Auth JWT for a Civic access token using OAuth 2.0 Token Exchange (RFC 8693)
 4. Civic Auth verifies the JWT against the public key
-5. The Civic access token is used to connect to Civic Nexus MCP for AI-powered tool calling
+5. The Civic access token is used to connect to Civic MCP for AI-powered tool calling
 
 > **Note**: This demo runs over HTTPS locally (via Next.js `--experimental-https`) so that the issuer URL matches Civic Auth's HTTPS requirement.
 
@@ -16,7 +16,7 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 
 - Node.js 18+
 - A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com))
-- A Civic Nexus organization linked to your Civic Auth app
+- A Civic organization linked to your Civic Auth app
 - An **Anthropic API key**
 
 ## Setup
@@ -75,7 +75,7 @@ In your Civic Auth application settings:
    CIVIC_CLIENT_ID=<your Civic Auth client ID>
    CIVIC_CLIENT_SECRET=<your Civic Auth client secret>
 
-   MCP_SERVER_URL=https://nexus.civic.com/mcp
+   MCP_SERVER_URL=https://app.civic.com/mcp
    ANTHROPIC_API_KEY=<your Anthropic API key>
    ```
 

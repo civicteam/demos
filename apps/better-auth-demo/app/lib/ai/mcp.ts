@@ -66,7 +66,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 
     const cachedEntry = clientCache.get(userId);
     if (cachedEntry && cachedEntry.civicTokenExpiry > new Date()) {
-      debugAPI(`Using cached Nexus client for user ${userId}`);
+      debugAPI(`Using cached Civic client for user ${userId}`);
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
@@ -85,7 +85,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
     debugAPI("Exchanging Better Auth JWT for Civic access token");
     const civicToken = await exchangeTokenForCivic(betterAuthToken);
 
-    debugAPI(`Creating new Nexus client for user ${userId}`);
+    debugAPI(`Creating new Civic client for user ${userId}`);
     const client = new CivicMcpClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
@@ -101,7 +101,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 
     return client;
   } catch (error) {
-    debugAPI("Error getting Nexus client:", error);
+    debugAPI("Error getting Civic client:", error);
     return null;
   }
 }
@@ -110,14 +110,14 @@ export async function getTools(): Promise<ToolSet> {
   try {
     const client = await getCivicMcpClient();
     if (!client) {
-      debugAPI("No Nexus client available, returning empty tools");
+      debugAPI("No Civic client available, returning empty tools");
       return {};
     }
     const tools = await client.getTools(vercelAIAdapter());
     debugAPI("Loaded tools:", Object.keys(tools));
     return tools as ToolSet;
   } catch (error) {
-    debugAPI("Error getting Nexus tools:", error);
+    debugAPI("Error getting Civic tools:", error);
     return {};
   }
 }

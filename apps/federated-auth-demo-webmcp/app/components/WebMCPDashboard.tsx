@@ -35,7 +35,7 @@ export default function WebMCPDashboard() {
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">
             {isLoading
-              ? "Connecting to Nexus Hub..."
+              ? "Connecting to Civic Hub..."
               : isRegistered
                 ? `Registered ${toolCount} tool${toolCount !== 1 ? "s" : ""} with navigator.modelContext`
                 : "Not connected"}

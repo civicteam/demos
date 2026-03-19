@@ -16,11 +16,11 @@ servers:
       port:
         default: '3005'
         description: Port number where the Whitelabel Web App is running
-  - url: https://nexus-dev.civic.com/demo
+  - url: https://app-dev.civic.com/demo
     description: Development environment
-  - url: https://nexus-preprod.civic.com/demo
+  - url: https://app-preprod.civic.com/demo
     description: Pre-production environment
-  - url: https://nexus.civic.com/demo
+  - url: https://app.civic.com/demo
     description: Production environment
 
 paths:

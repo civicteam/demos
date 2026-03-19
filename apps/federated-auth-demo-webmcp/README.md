@@ -1,12 +1,12 @@
 # Federated Auth Demo
 
-This demo application shows how to integrate a custom authentication system with Civic Nexus using OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
+This demo application shows how to integrate a custom authentication system with Civic using OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
 
 ## How It Works
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic Nexus   │
+│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic   │
 │   (Auth.js)     │     │   (JWT Issuer)  │     │   (Exchange)    │     │   (MCP Hub)     │
 └────────┬────────┘     └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
          │                       │                       │                       │
@@ -58,19 +58,19 @@ In your Civic Auth application settings, configure the Token Exchange feature:
 
 > **Note**: The issuer and audience must match exactly what your app includes in its JWT claims.
 
-### Step 3: Create a Civic Nexus Organization
+### Step 3: Create a Civic Organization
 
-1. Go to [nexus.civic.com](https://nexus.civic.com) and log in
+1. Go to [app.civic.com](https://app.civic.com) and log in
 2. Create a new organization dedicated to your application
 3. Note the **Account ID** of your new organization (you'll need this for the next step)
 
-### Step 4: Link Your Civic Auth Account to Nexus
+### Step 4: Link Your Civic Auth Account to Civic
 
 Contact a Civic representative with:
 - Your **Civic Auth Client ID**
-- Your **Nexus Organization Account ID**
+- Your **Civic Organization Account ID**
 
-They will link your Civic Auth application to your Nexus organization and configure the necessary internal settings.
+They will link your Civic Auth application to your Civic organization and configure the necessary internal settings.
 
 ### Step 5: Run the Demo
 
@@ -131,13 +131,13 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 
 ### Using @civic/nexus-client
 
-This demo uses `@civic/nexus-client` to connect to Civic Nexus MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+This demo uses `@civic/nexus-client` to connect to Civic MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
 
 ```typescript
 import { NexusClient } from "@civic/nexus-client";
 import { vercelAIAdapter } from "@civic/nexus-client/adapters/vercel-ai";
 
-// Create a Nexus client with the exchanged Civic token
+// Create a Civic client with the exchanged Civic token
 const client = new NexusClient({
   url: process.env.MCP_SERVER_URL,
   auth: {
@@ -162,7 +162,7 @@ const result = await generateText({
 await client.close();
 ```
 
-The `x-civic-profile` header is required for federated authentication to lock users to a specific profile within your Nexus organization.
+The `x-civic-profile` header is required for federated authentication to lock users to a specific profile within your Civic organization.
 
 ### Client Caching
 
@@ -179,7 +179,7 @@ The demo caches `NexusClient` instances per user to avoid repeated token exchang
 | `CIVIC_AUTH_URL` | Civic Auth endpoint (default: `https://auth.civic.com/oauth`) |
 | `CIVIC_CLIENT_ID` | Your Civic Auth client ID |
 | `CIVIC_CLIENT_SECRET` | Your Civic Auth client secret |
-| `MCP_SERVER_URL` | Civic Nexus MCP endpoint (default: `https://nexus.civic.com/mcp`) |
+| `MCP_SERVER_URL` | Civic MCP endpoint (default: `https://app.civic.com/mcp`) |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
 | `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
 
@@ -222,6 +222,6 @@ Your JWT must include these claims:
 
 ### MCP Connection Fails with 401
 
-- Ensure your Nexus organization is linked to your Civic Auth client
+- Ensure your Civic organization is linked to your Civic Auth client
 - Check that your organization has the required MCP servers installed
 - Verify the access token is being passed correctly

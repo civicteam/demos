@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   preprocessMessages(messages);
 
   const tools = await getTools();
-  debugAPI("Loaded Nexus tools:", Object.keys(tools));
+  debugAPI("Loaded Civic tools:", Object.keys(tools));
 
   try {
     const result = streamText({

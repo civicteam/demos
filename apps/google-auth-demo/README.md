@@ -7,14 +7,14 @@ Google OAuth + Civic Auth token exchange demo -- the simplest token exchange flo
 1. User signs in with Google via NextAuth v5
 2. Google issues a standard RS256 ID token
 3. The app exchanges the Google ID token for a Civic Auth access token via OAuth 2.0 Token Exchange (RFC 8693)
-4. The Civic Auth token is used to connect to Civic Nexus MCP
+4. The Civic Auth token is used to connect to Civic MCP
 
 ## Prerequisites
 
 - Node.js 18+
 - A **Google Cloud project** with OAuth 2.0 credentials (see Step 1 below)
 - A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com)) with token exchange configured (see Step 2 below)
-- A Civic Nexus organization linked to your Civic Auth app
+- A Civic organization linked to your Civic Auth app
 - An **Anthropic API key**
 
 ## Setup
@@ -27,12 +27,12 @@ Google OAuth + Civic Auth token exchange demo -- the simplest token exchange flo
 4. Click **+ CREATE CREDENTIALS > OAuth client ID**
 5. If prompted, configure the **OAuth consent screen** first:
    - Choose **External** user type
-   - Fill in the app name (e.g., "Nexus Google Auth Demo") and your email
+   - Fill in the app name (e.g., "Civic Google Auth Demo") and your email
    - You can skip scopes and test users for now
    - Click through to finish
 6. Back on **Create OAuth client ID**:
    - **Application type:** Web application
-   - **Name:** anything (e.g., "Nexus Google Auth Demo")
+   - **Name:** anything (e.g., "Civic Google Auth Demo")
    - **Authorized JavaScript origins:** `http://localhost:3025`
    - **Authorized redirect URIs:** `http://localhost:3025/api/auth/callback/google`
    - Click **Create**

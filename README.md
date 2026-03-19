@@ -1,12 +1,12 @@
-# nexus-demo
+# civic-demo
 
-Demo projects showcasing Civic Nexus integrations.
+Demo projects showcasing Civic integrations.
 
 ## Projects
 
 ### [federated-auth-demo](./apps/federated-auth-demo)
 
-A Next.js application demonstrating federated authentication with Civic Nexus. Features include:
+A Next.js application demonstrating federated authentication with Civic. Features include:
 
 - AI chat interface with MCP (Model Context Protocol) integration
 - OAuth-based authentication flow
@@ -41,7 +41,7 @@ pnpm build
 ## Project Structure
 
 ```
-nexus-demo/
+civic-demo/
 ├── apps/
 │   └── federated-auth-demo/    # Federated auth demo app
 ├── package.json                 # Root workspace config
