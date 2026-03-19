@@ -1,8 +1,18 @@
 import type { useChat } from "@ai-sdk/react";
+import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import type { ReasoningUIPart, UIMessage } from "ai";
+
+// Open all links in a new window/tab
+const markdownComponents: ComponentProps<typeof ReactMarkdown>["components"] = {
+  a: ({ children, ...props }) => (
+    <a {...props} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
+};
 
 export const MessageContent = ({
   message,
@@ -11,7 +21,6 @@ export const MessageContent = ({
   message: UIMessage;
   status: ReturnType<typeof useChat>["status"];
 }) => {
-  // Split parts into reasoning and text
   const reasoningParts = message.parts
     ?.filter<ReasoningUIPart>((part) => part.type === "reasoning")
     .map((part) => part.text)
@@ -27,16 +36,14 @@ export const MessageContent = ({
       key={message.id}
       className={`mb-4 ${message.role === "user" ? "text-right" : "text-left"}`}
     >
-      {/* Markdown text content */}
       <span
         className={`inline-block p-2 rounded-lg ${
           message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
         }`}
       >
-        <ReactMarkdown>{textParts}</ReactMarkdown>
+        <ReactMarkdown components={markdownComponents}>{textParts}</ReactMarkdown>
       </span>
 
-      {/* Reasoning content */}
       {reasoningParts && (
         <Collapsible className="mt-2" defaultOpen={status !== "ready"}>
           <CollapsibleTrigger className="cursor-pointer text-sm italic text-gray-500">

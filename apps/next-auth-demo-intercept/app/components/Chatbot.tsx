@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCivicAuth } from "../hooks/useCivicAuth";
 
 import { MessageContent } from "./MessageContent";
@@ -14,6 +14,7 @@ export default function Chatbot() {
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [rateLimitCounter, setRateLimitCounter] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
   const { messages, status, sendMessage } = useChat({
@@ -30,6 +31,11 @@ export default function Chatbot() {
 
   const aiIsTyping = status === "streaming" || status === "submitted";
   useCivicAuth(aiIsTyping);
+
+  // Auto-scroll to bottom on new messages or while streaming
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, status]);
 
   return (
     <Card className="w-full flex flex-col h-[calc(100vh-160px)]">
@@ -52,6 +58,7 @@ export default function Chatbot() {
             </span>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </CardContent>
       <CardFooter className="flex-shrink-0 border-t">
         <form
@@ -59,7 +66,9 @@ export default function Chatbot() {
           className="flex w-full space-x-2"
           onSubmit={(e) => {
             e.preventDefault();
+            if (!input.trim()) return;
             sendMessage({ text: input });
+            setInput("");
           }}
         >
           <Input
