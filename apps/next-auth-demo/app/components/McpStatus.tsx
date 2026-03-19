@@ -131,9 +131,6 @@ export function McpStatus() {
               <span className="text-sm text-gray-600 dark:text-gray-400">MCP Hub</span>
               <div className="text-right">
                 <StatusBadge success={status.mcp.connected} />
-                {status.mcp.toolCount !== undefined && (
-                  <p className="text-xs text-gray-500 mt-1">{status.mcp.toolCount} tools</p>
-                )}
                 {status.mcp.error && (
                   <p className="text-xs text-red-500 mt-1 max-w-[160px] truncate" title={status.mcp.error}>
                     {status.mcp.error}

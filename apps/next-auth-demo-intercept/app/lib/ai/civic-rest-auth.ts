@@ -1,6 +1,5 @@
 import type { ToolSet } from "ai";
 import type { CivicMcpClient } from "@civic/mcp-client";
-import { debugAPI } from "@/lib/debug";
 import { getCivicAuthToken } from "./mcp";
 
 interface PendingAuth {
@@ -105,7 +104,7 @@ export function parseCivicAuthResponse(result: unknown): CivicAuthFields | null 
   }
 
   if (pollingEndpoint && continueJobId) {
-    debugAPI("[civic-rest-auth] Found auth fields: pollingEndpoint=%s, continueJobId=%s", pollingEndpoint, continueJobId);
+    console.log("[civic-rest-auth] Found auth fields: pollingEndpoint=%s, continueJobId=%s", pollingEndpoint, continueJobId);
     return { pollingEndpoint, continueJobId };
   }
 
@@ -147,12 +146,12 @@ async function pollForApproval(
         method: "HEAD",
         headers: { Authorization: `Bearer ${civicToken}` },
       });
-      debugAPI("[civic-rest-auth] Poll HEAD status: %d", res.status);
+      console.log("[civic-rest-auth] Poll HEAD status: %d", res.status);
       // 200 = approved, 202 = still pending, 422 = error
       if (res.status === 200) return true;
       if (res.status === 422) return false;
     } catch (err) {
-      debugAPI("[civic-rest-auth] Error polling auth endpoint:", err);
+      console.log("[civic-rest-auth] Error polling auth endpoint:", err);
     }
   }
 
@@ -180,7 +179,7 @@ async function handleAuthFlow(
   // 1. Fetch the auth URL from the polling endpoint
   const authUrl = await fetchAuthUrl(pollingEndpoint, civicToken);
   if (!authUrl) {
-    debugAPI("[civic-rest-auth] Failed to fetch auth URL from polling endpoint");
+    console.log("[civic-rest-auth] Failed to fetch auth URL from polling endpoint");
     return {
       content: [{ type: "text", text: "Failed to retrieve authorization URL. Please try again." }],
       isError: true,
@@ -196,7 +195,7 @@ async function handleAuthFlow(
     createdAt: Date.now(),
   });
 
-  debugAPI("[civic-rest-auth] Stored pending auth for user %s, authUrl: %s", userId, authUrl);
+  console.log("[civic-rest-auth] Stored pending auth for user %s, authUrl: %s", userId, authUrl);
 
   // 3. Poll for approval (15s timeout)
   const approved = await pollForApproval(pollingEndpoint, civicToken);
@@ -206,7 +205,7 @@ async function handleAuthFlow(
     const entry = pendingAuthStore.get(userId);
     if (entry) entry.status = "timeout";
     // Keep the entry around so the client can still show the link
-    debugAPI("[civic-rest-auth] Auth polling timed out for user %s", userId);
+    console.log("[civic-rest-auth] Auth polling timed out for user %s", userId);
     return {
       content: [{
         type: "text",
@@ -218,13 +217,13 @@ async function handleAuthFlow(
   // 4. Auth approved — clean up and call continue_job
   clearPendingAuth(userId);
 
-  debugAPI("[civic-rest-auth] Auth approved for user %s, calling continue_job with jobId: %s", userId, continueJobId);
+  console.log("[civic-rest-auth] Auth approved for user %s, calling continue_job with jobId: %s", userId, continueJobId);
 
   try {
     const continueResult = await civicClient.callTool("continue_job", { params: { jobId: continueJobId } });
     return continueResult;
   } catch (err) {
-    debugAPI("[civic-rest-auth] Error calling continue_job:", err);
+    console.log("[civic-rest-auth] Error calling continue_job:", err);
     return {
       content: [{
         type: "text",
@@ -267,7 +266,7 @@ export function wrapToolsWithCivicAuth(
         const authFields = parseCivicAuthResponse(result);
         if (!authFields) break;
 
-        debugAPI("[civic-rest-auth] Intercepted auth response for tool \"%s\" (iteration %d)", name, i + 1);
+        console.log("[civic-rest-auth] Intercepted auth response for tool \"%s\" (iteration %d)", name, i + 1);
         result = await handleAuthFlow(authFields, civicClient, userId, civicToken);
       }
 

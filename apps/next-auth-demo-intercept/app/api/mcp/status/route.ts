@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import { getMcpClient } from "@/lib/ai/mcp";
-import { debugAPI } from "@/lib/debug";
 
 export interface McpStatusResponse {
   authenticated: boolean;
@@ -11,7 +10,6 @@ export interface McpStatusResponse {
   };
   mcp: {
     connected: boolean;
-    toolCount?: number;
     error?: string;
   };
 }
@@ -24,78 +22,43 @@ export async function GET(): Promise<Response> {
   };
 
   try {
-    // Check authentication
     const session = await auth();
     status.authenticated = !!session?.user;
+    if (!status.authenticated) return Response.json(status);
 
-    if (!status.authenticated) {
-      return Response.json(status);
-    }
-
-    // Try to get an MCP client (handles token exchange internally)
     try {
       const client = await getMcpClient();
-
       if (!client) {
-        debugAPI("[mcp/status] Could not create MCP client");
         status.tokenExchange = { status: "failed", error: "Could not create MCP client" };
         return Response.json(status);
       }
 
-      // Resolve the token (triggers exchange if needed) so getAccessToken() is populated
       const token = await client.getConfig().resolveToken();
+      status.tokenExchange = { status: "success", accessToken: client.getAccessToken() };
 
-      status.tokenExchange = {
-        status: "success",
-        accessToken: client.getAccessToken(),
-      };
-
-      // Simple connectivity check - just verify the server is reachable and auth works
       try {
         const mcpResponse = await fetch("https://app.civic.com/mcp", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        const responseText = await mcpResponse.text();
-        debugAPI("[mcp/status] MCP check response: %d %s", mcpResponse.status, responseText.slice(0, 200));
-
-        if (mcpResponse.ok) {
-          status.mcp = { connected: true };
-        } else if (mcpResponse.status === 401) {
-          status.mcp = {
-            connected: false,
-            error: `Auth failed: ${responseText.slice(0, 100)}`,
-          };
-        } else {
-          status.mcp = { connected: true }; // Server is reachable
+        status.mcp = { connected: mcpResponse.ok || mcpResponse.status !== 401 };
+        if (mcpResponse.status === 401) {
+          const text = await mcpResponse.text();
+          status.mcp = { connected: false, error: `Auth failed: ${text.slice(0, 100)}` };
         }
       } catch (mcpError) {
-        const mcpErrorMessage = mcpError instanceof Error ? mcpError.message : "Unknown error";
-        debugAPI("[mcp/status] MCP connectivity check failed:", mcpErrorMessage);
-        status.mcp = {
-          connected: false,
-          error: mcpErrorMessage.includes("ECONNREFUSED")
-            ? "MCP Hub not running"
-            : mcpErrorMessage,
-        };
+        const msg = mcpError instanceof Error ? mcpError.message : "Unknown error";
+        status.mcp = { connected: false, error: msg.includes("ECONNREFUSED") ? "MCP Hub not running" : msg };
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      debugAPI("[mcp/status] Token exchange failed:", errorMessage);
-      status.tokenExchange = { status: "failed", error: errorMessage };
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      status.tokenExchange = { status: "failed", error: msg };
       status.mcp = { connected: false, error: "Token exchange failed" };
     }
 
     return Response.json(status);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    debugAPI("[mcp/status] Unexpected error:", errorMessage);
-    return Response.json({
-      ...status,
-      tokenExchange: { status: "failed", error: errorMessage },
-    });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return Response.json({ ...status, tokenExchange: { status: "failed", error: msg } });
   }
 }
