@@ -13,7 +13,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.0",
     "@ai-sdk/provider": "^3.0.0",
-    "@ai-sdk/react": "^3.0.1",
+    "@ai-sdk/react": "^3.0.118",
     "@auth/core": "0.37.2",
     "@civic/mcp-client": "0.1.0",
     "@radix-ui/react-collapsible": "^1.1.3",
