@@ -81,7 +81,7 @@ export default function Chatbot() {
           )}
         </CardContent>
         <CardFooter className="flex-shrink-0 border-t">
-          <form ref={formRef} className="flex w-full space-x-2" onSubmit={(e) => { e.preventDefault(); sendMessage({ text: input }); }}>
+          <form ref={formRef} className="flex w-full space-x-2" onSubmit={(e) => { e.preventDefault(); sendMessage({ text: input }); setInput(""); }}>
             <Input className="flex-grow" placeholder="Type your message..." value={input} onChange={(e) => setInput(e.target.value)} />
             <Button disabled={aiIsTyping || isRateLimited} type="submit">
               {isRateLimited ? `Retry in ${rateLimitCounter}s` : "Send"}
