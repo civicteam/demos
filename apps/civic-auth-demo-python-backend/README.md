@@ -1,4 +1,4 @@
-# Civic Auth Demo
+# Civic Auth with Python Backend Demo
 
 Direct Civic Auth integration with Civic MCP -- the simplest path to connecting an AI assistant to Civic tools.
 
