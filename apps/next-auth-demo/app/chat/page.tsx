@@ -1,8 +1,6 @@
 import { auth } from "@/auth";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import BasePathImage from "../components/BasePathImage";
 import Chatbot from "../components/Chatbot";
 import { McpStatus } from "../components/McpStatus";
 import { UserMenu } from "../components/UserMenu";
@@ -21,35 +19,22 @@ async function getSessionToken(): Promise<string | null> {
 export default async function ChatPage() {
   const session = await auth();
 
-  // If not logged in, redirect to home page
   if (!session?.user) {
-    console.log("User is not logged in!");
     redirect("/");
   }
 
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    console.log("No session token found");
     redirect("/");
   }
 
-  // Encrypt the session token for passing to client components
   const encryptedToken = await encryptToken(sessionToken);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <header className="w-full bg-white dark:bg-gray-800 shadow-sm py-3 px-6">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-          <Link className="flex items-center" href="/">
-            <BasePathImage
-              priority
-              alt="Civic logo"
-              className="dark:invert"
-              height={30}
-              src="civic-logo-dark.svg"
-              width={140}
-            />
-          </Link>
+          <h1 className="text-lg font-semibold">Next Auth Demo</h1>
           <div className="flex items-center gap-4">
             <McpStatus />
             <UserMenu />

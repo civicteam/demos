@@ -11,18 +11,9 @@ import { ToolCommands } from "./ToolCommands";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { DefaultChatTransport } from "ai";
 
-const modelOptions = [
-  // { value: 'bedrock', label: 'AWS Bedrock (Claude 3.5 Sonnet)' },
-  // { value: 'openai', label: 'OpenAI (GPT 4o)' },
-  { value: "anthropic", label: "Anthropic (Claude Sonnet 4.6)" },
-  // { value: 'ollama', label: 'Ollama (Deepseek R1 32b Distill) - LOCAL ONLY' },
-];
-
 export default function Chatbot() {
-  const [selectedModel, setSelectedModel] = useState("anthropic");
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [rateLimitCounter, setRateLimitCounter] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
@@ -30,13 +21,11 @@ export default function Chatbot() {
 
   const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      api: withBasePath("/api/chat"), // Use the utility function from utils.ts
-      body: { provider: selectedModel },
+      api: withBasePath("/api/chat"),
+      body: { provider: "anthropic" },
     }),
     onError: (error) => {
       console.error("Error processing chat request", error);
-
-      // Set rate limited state
       setIsRateLimited(true);
       setRateLimitCounter(60);
     },
@@ -45,7 +34,6 @@ export default function Chatbot() {
   const aiIsTyping = status === "streaming" || status === "submitted";
   useCivicAuth(aiIsTyping);
 
-  // Check if any messages have tool invocations
   const hasToolInvocations = messages.some((message) =>
     message.parts?.some((part) => part.type === "tool-invocation"),
   );
@@ -54,29 +42,13 @@ export default function Chatbot() {
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-160px)]">
       <Card className="w-full lg:flex-1 flex flex-col">
         <CardHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <CardTitle>Whitelabel AI Assistant</CardTitle>
-            <div className="w-64 md:w-80">
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[280px]">
-                  {modelOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <CardTitle>AI Assistant (Intercept)</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto">
           {messages.length === 0 && (
             <div className="h-full flex items-center justify-center text-center text-gray-500">
               <div>
-                <h3 className="text-lg font-medium mb-2">Welcome to the Whitelabel AI Assistant</h3>
+                <h3 className="text-lg font-medium mb-2">Welcome to the AI Assistant</h3>
                 <p>Ask me anything to get started.</p>
                 <p className="text-gray-400 italic mt-2">
                   Not sure how to start? Try:{" "}
@@ -120,7 +92,6 @@ export default function Chatbot() {
         </CardFooter>
       </Card>
 
-      {/* Only render ToolCommands if there are tool invocations */}
       {hasToolInvocations && (
         <div className="hidden lg:block lg:w-1/3 max-w-sm">
           <ToolCommands messages={messages} />
