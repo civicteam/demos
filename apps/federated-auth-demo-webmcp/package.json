@@ -14,7 +14,7 @@
   "dependencies": {
     "@auth/core": "0.37.2",
     "@civic/mcp-client": "^0.1.0",
-    "@modelcontextprotocol/sdk": "1.25.2",
+    "@modelcontextprotocol/sdk": "1.26.0",
     "@radix-ui/react-slot": "^1.1.2",
     "@tailwindcss/postcss": "^4.1.16",
     "class-variance-authority": "^0.7.1",
