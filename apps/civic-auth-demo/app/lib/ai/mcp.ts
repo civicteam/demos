@@ -1,5 +1,4 @@
 import type { ToolSet } from "ai";
-import { debugAPI } from "@/lib/debug";
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { getUser, getTokens } from "@civic/auth/nextjs";
@@ -15,17 +14,12 @@ const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
 export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
   try {
     const user = await getUser();
-    if (!user) {
-      debugAPI("No authenticated user found");
-      return null;
-    }
+    if (!user) return null;
 
-    // Use the user's id or a stable identifier
     const userId = user.id || user.email || "unknown";
 
     const cachedEntry = clientCache.get(userId);
     if (cachedEntry) {
-      debugAPI(`Using cached Civic client for user ${userId}`);
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
@@ -47,7 +41,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 
     return client;
   } catch (error) {
-    debugAPI("Error getting Civic client:", error);
+    console.error("Error getting Civic client:", error);
     return null;
   }
 }
@@ -55,15 +49,10 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 export async function getTools(): Promise<ToolSet> {
   try {
     const client = await getCivicMcpClient();
-    if (!client) {
-      debugAPI("No Civic client available, returning empty tools");
-      return {};
-    }
-    const tools = await client.getTools(vercelAIAdapter());
-    debugAPI("Loaded tools:", Object.keys(tools));
-    return tools as ToolSet;
+    if (!client) return {};
+    return (await client.getTools(vercelAIAdapter())) as ToolSet;
   } catch (error) {
-    debugAPI("Error getting Civic tools:", error);
+    console.error("Error getting Civic tools:", error);
     return {};
   }
 }
@@ -71,12 +60,12 @@ export async function getTools(): Promise<ToolSet> {
 export async function closeCivicMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
-    try { await cachedEntry.client.close(); } catch (error) { debugAPI("Error closing client:", error); }
+    try { await cachedEntry.client.close(); } catch (error) { console.error("Error closing client:", error); }
     clientCache.delete(userId);
   }
 }
 
-export async function cleanupInactiveClients(): Promise<void> {
+async function cleanupInactiveClients(): Promise<void> {
   const now = Date.now();
   const inactiveUserIds = Array.from(clientCache.entries())
     .filter(([, { lastUsed }]) => now - lastUsed > INACTIVITY_TIMEOUT)
