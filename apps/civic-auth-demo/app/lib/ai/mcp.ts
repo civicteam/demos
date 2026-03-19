@@ -2,7 +2,7 @@ import type { ToolSet } from "ai";
 import { debugAPI } from "@/lib/debug";
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
-import { getUser } from "@civic/auth/nextjs";
+import { getUser, getTokens } from "@civic/auth/nextjs";
 
 interface CachedClient {
   client: CivicMcpClient;
@@ -30,24 +30,13 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
       return cachedEntry.client;
     }
 
-    // With Civic Auth, the token is available directly — no exchange needed!
-    // The getUser() function provides access to the token via the user object.
-    // We need to get the access token from the Civic Auth session.
-    // Civic Auth stores the token in the session which is available server-side.
+    const tokens = await getTokens();
+    const accessToken = tokens?.accessToken || "";
 
-    // For @civic/auth/nextjs, the access token can be obtained from the auth context
-    // We need to check how @civic/auth exposes the token server-side
-    // Based on the docs, getUser() returns the user object. The token is in the session.
-    // Let's use a different approach: read the token from cookies/session
-
-    debugAPI(`Creating new Civic client for user ${userId}`);
-
-    // Civic Auth tokens are directly valid for the MCP endpoint
-    // The middleware handles token refresh, we just need to get the current token
     const client = new CivicMcpClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
-        token: (user as Record<string, unknown>).idToken as string || "",
+        token: accessToken,
       },
     });
 

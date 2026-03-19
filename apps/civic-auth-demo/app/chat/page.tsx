@@ -1,4 +1,5 @@
 import Chatbot from "../components/Chatbot";
+import { HeaderUserButton } from "../components/HeaderUserButton";
 
 export default function ChatPage() {
   return (
@@ -6,6 +7,7 @@ export default function ChatPage() {
       <header className="w-full bg-white dark:bg-gray-800 shadow-sm py-3 px-6">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <h2 className="text-lg font-semibold">Civic Auth Demo</h2>
+          <HeaderUserButton />
         </div>
       </header>
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
