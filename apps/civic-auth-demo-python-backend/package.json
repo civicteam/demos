@@ -1,0 +1,50 @@
+{
+  "name": "civic-auth-demo-python-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3024",
+    "build": "next build --turbo",
+    "start": "next start --port 3024",
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.0",
+    "@ai-sdk/provider": "^3.0.0",
+    "@ai-sdk/react": "^3.0.1",
+    "@civic/auth": "^0.15.1",
+    "@civic/mcp-client": "^0.1.0",
+    "@radix-ui/react-collapsible": "^1.1.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@ai-sdk/mcp": "^1.0.19",
+    "ai": "^6.0.79",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.483.0",
+    "next": "^16.1.5",
+    "next-themes": "^0.4.6",
+    "postcss": "^8.5.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss": "^4.0.15",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.0.2",
+    "@types/node": "^22.13.11",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.22.0",
+    "eslint-config-next": "^16.1.5",
+    "typescript": "^5.8.2"
+  },
+  "browserslist": [
+    "defaults and fully supports es6-module"
+  ]
+}
