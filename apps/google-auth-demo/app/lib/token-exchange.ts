@@ -1,7 +1,3 @@
-import { getLogger } from "./debug";
-
-const logger = getLogger();
-
 export interface TokenExchangeResponse {
   accessToken: string;
   tokenType: string;
@@ -27,7 +23,6 @@ export async function exchangeTokenForCivic(subjectToken: string): Promise<Token
     scope: "openid profile email",
   });
 
-  logger.debug("Exchanging Google ID token for Civic access token");
 
   const response = await fetch(`${civicAuthUrl}/token`, {
     method: "POST",
@@ -40,7 +35,7 @@ export async function exchangeTokenForCivic(subjectToken: string): Promise<Token
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error("Token exchange failed", { status: response.status, error: errorText });
+    console.error("Token exchange failed", { status: response.status, error: errorText });
     throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
   }
 

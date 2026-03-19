@@ -1,5 +1,4 @@
 import type { ToolSet } from "ai";
-import { debugAPI } from "@/lib/debug";
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 import { exchangeTokenForCivic } from "@/lib/token-exchange";
@@ -57,35 +56,25 @@ async function getBetterAuthToken(): Promise<string | null> {
 export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
   try {
     const session = await getBetterAuthSession();
-    if (!session?.user?.id) {
-      debugAPI("No authenticated user found");
-      return null;
-    }
+    if (!session?.user?.id) return null;
 
     const userId = session.user.id;
 
     const cachedEntry = clientCache.get(userId);
     if (cachedEntry && cachedEntry.civicTokenExpiry > new Date()) {
-      debugAPI(`Using cached Civic client for user ${userId}`);
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
 
     if (cachedEntry) {
-      debugAPI(`Civic token expired for user ${userId}, refreshing...`);
       await closeCivicMcpClient(userId);
     }
 
     const betterAuthToken = await getBetterAuthToken();
-    if (!betterAuthToken) {
-      debugAPI("No Better Auth token found");
-      return null;
-    }
+    if (!betterAuthToken) return null;
 
-    debugAPI("Exchanging Better Auth JWT for Civic access token");
     const civicToken = await exchangeTokenForCivic(betterAuthToken);
 
-    debugAPI(`Creating new Civic client for user ${userId}`);
     const client = new CivicMcpClient({
       url: process.env.MCP_SERVER_URL,
       auth: {
@@ -101,7 +90,7 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 
     return client;
   } catch (error) {
-    debugAPI("Error getting Civic client:", error);
+    console.error("Error getting Civic client:", error);
     return null;
   }
 }
@@ -109,15 +98,10 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
 export async function getTools(): Promise<ToolSet> {
   try {
     const client = await getCivicMcpClient();
-    if (!client) {
-      debugAPI("No Civic client available, returning empty tools");
-      return {};
-    }
-    const tools = await client.getTools(vercelAIAdapter());
-    debugAPI("Loaded tools:", Object.keys(tools));
-    return tools as ToolSet;
+    if (!client) return {};
+    return (await client.getTools(vercelAIAdapter())) as ToolSet;
   } catch (error) {
-    debugAPI("Error getting Civic tools:", error);
+    console.error("Error getting Civic tools:", error);
     return {};
   }
 }
@@ -125,12 +109,12 @@ export async function getTools(): Promise<ToolSet> {
 export async function closeCivicMcpClient(userId: string): Promise<void> {
   const cachedEntry = clientCache.get(userId);
   if (cachedEntry) {
-    try { await cachedEntry.client.close(); } catch (error) { debugAPI("Error closing client:", error); }
+    try { await cachedEntry.client.close(); } catch (error) { console.error("Error closing client:", error); }
     clientCache.delete(userId);
   }
 }
 
-export async function cleanupInactiveClients(): Promise<void> {
+async function cleanupInactiveClients(): Promise<void> {
   const now = Date.now();
   const inactiveUserIds = Array.from(clientCache.entries())
     .filter(([, { lastUsed }]) => now - lastUsed > INACTIVITY_TIMEOUT)

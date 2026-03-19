@@ -1,7 +1,3 @@
-import { getLogger } from "./debug";
-
-const logger = getLogger();
-
 interface TokenExchangeConfig {
   civicAuthUrl: string;
   clientId: string;
@@ -40,7 +36,6 @@ export async function exchangeTokenForCivic(subjectToken: string): Promise<Token
   scope: "openid profile email",
   });
 
-  logger.debug("Exchanging JWT for Civic access token");
 
   const response = await fetch(`${config.civicAuthUrl}/token`, {
     method: "POST",
@@ -53,10 +48,7 @@ export async function exchangeTokenForCivic(subjectToken: string): Promise<Token
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error("Token exchange failed", {
-      status: response.status,
-      error: errorText,
-    });
+    console.error("Token exchange failed", { status: response.status, error: errorText });
     throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
   }
 
