@@ -55,11 +55,11 @@ export async function POST(req: Request) {
 
   preprocessMessages(messages);
 
-  // Get the Nexus tools for this user's session
+  // Get the Civic tools for this user's session
   const session = await auth();
   const user = session?.user?.id ? { id: session.user.id } : null;
   const rawTools = await getTools();
-  debugAPI("Loaded Nexus tools:", Object.keys(rawTools));
+  debugAPI("Loaded Civic tools:", Object.keys(rawTools));
 
   // Wrap tools with civic:rest-auth handling
   let tools = rawTools;

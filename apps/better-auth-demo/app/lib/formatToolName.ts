@@ -65,9 +65,9 @@ export function removeDuplicateServerPrefix(
  * Apply brand-specific formatting rules to server names.
  */
 function applyBrandingRules(formatted: string): string {
-  // Civic services -> "Civic Nexus"
+  // Civic services -> "Civic"
   if (formatted.toLowerCase().startsWith("civic")) {
-    return "Civic Nexus";
+    return "Civic";
   }
 
   // n8n -> keep lowercase with capitalized following words
@@ -109,7 +109,7 @@ function applyBrandingRules(formatted: string): string {
 
 /**
  * Format server names with proper capitalization and branding.
- * @example formatServerName("civic-manager") -> "Civic Nexus"
+ * @example formatServerName("civic-manager") -> "Civic"
  */
 export function formatServerName(name: string): string {
   const formatted = name
@@ -214,7 +214,7 @@ export function extractSinglePartServerAndTool(
 }
 
 /**
- * Check if a tool name is an internal Civic tool that should be branded as Civic Nexus.
+ * Check if a tool name is an internal Civic tool that should be branded as Civic.
  */
 export function isInternalCivicTool(cleanName: string): boolean {
   const internalCivicTools = ["continue_job", "continue-job"];
@@ -241,8 +241,8 @@ export function formatStandaloneTool(cleanName: string): string {
  * @example
  * formatToolName("google-workspace_users-list") -> "Google Workspace: Users list"
  * formatToolName("updateConfluencePage", "Atlassian") -> "Atlassian: Update confluence page"
- * formatToolName("civic-manager_sync") -> "Civic Nexus: Sync"
- * formatToolName("civic-account_foo") -> "Civic Nexus: Foo"
+ * formatToolName("civic-manager_sync") -> "Civic: Sync"
+ * formatToolName("civic-account_foo") -> "Civic: Foo"
  */
 export function formatToolName(rawName: string, serverName?: string): string {
   if (!rawName) return rawName;
@@ -268,10 +268,10 @@ export function formatToolName(rawName: string, serverName?: string): string {
     return `${formattedServer}: ${formattedTool}`;
   }
 
-  // Internal Civic tools (hub tools) should be branded as Civic Nexus
+  // Internal Civic tools (hub tools) should be branded as Civic
   if (isInternalCivicTool(cleanName)) {
     const formattedTool = formatToolPart(cleanName);
-    return `Civic Nexus: ${formattedTool}`;
+    return `Civic: ${formattedTool}`;
   }
 
   // Try to extract branded server (google-*, civic-*, ms365-*, etc.)

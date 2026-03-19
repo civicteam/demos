@@ -1,13 +1,13 @@
-# Civic Nexus Token Exchange Integration Guide
+# Civic Token Exchange Integration Guide
 
-This guide explains how third-party applications can use OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)) to map users from their own identity system to Civic Nexus.
+This guide explains how third-party applications can use OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)) to map users from their own identity system to Civic.
 
 ## Overview
 
-Token exchange allows your application to swap a self-issued JWT (representing one of your users) for a Civic access token. That access token then authorizes the user to interact with Civic Nexus MCP tools on behalf of your organization.
+Token exchange allows your application to swap a self-issued JWT (representing one of your users) for a Civic access token. That access token then authorizes the user to interact with Civic MCP tools on behalf of your organization.
 
 ```
-Your App                    Civic Auth                  Civic Nexus
+Your App                    Civic Auth                  Civic
   │                            │                            │
   │  1. Sign JWT (RS256)       │                            │
   │  with user claims          │                            │
@@ -33,8 +33,8 @@ Your App                    Civic Auth                  Civic Nexus
 Before integrating, you need:
 
 1. **A Civic Auth application** — register at [auth.civic.com](https://auth.civic.com) to get a Client ID and Client Secret.
-2. **A Civic Nexus organization** — create one at [nexus.civic.com](https://nexus.civic.com).
-3. **Linked accounts** — contact Civic to link your Auth Client ID to your Nexus Organization Account ID.
+2. **A Civic organization** — create one at [app.civic.com](https://app.civic.com).
+3. **Linked accounts** — contact Civic to link your Auth Client ID to your Civic Organization Account ID.
 4. **An RSA key pair** — used to sign your JWTs (RS256).
 
 ## Step 1: Generate an RSA Key Pair
@@ -105,7 +105,7 @@ When a user authenticates in your application, create a JWT with these claims:
 |-------|------|-------------|
 | `iss` | string | Your issuer URL. Must match the issuer configured in Civic Auth. |
 | `aud` | string | Must be `civic-mcp`. |
-| `sub` | string | A stable, unique user identifier from your system. This is what Nexus uses to distinguish users within your organization. |
+| `sub` | string | A stable, unique user identifier from your system. This is what Civic uses to distinguish users within your organization. |
 | `iat` | number | Issued-at timestamp (seconds since epoch). |
 | `exp` | number | Expiration timestamp. Keep short-lived (recommended: 5–60 minutes). |
 
@@ -177,9 +177,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 | 400 | `invalid_request` | Malformed request or missing parameters. |
 | 401 | `invalid_client` | Bad Client ID or Client Secret. |
 
-## Step 6: Use the Access Token with Civic Nexus
+## Step 6: Use the Access Token with Civic
 
-Pass the Civic access token in the `Authorization` header when connecting to Nexus. Include the `x-civic-profile` header to scope requests to a profile within your organization.
+Pass the Civic access token in the `Authorization` header when connecting to Civic. Include the `x-civic-profile` header to scope requests to a profile within your organization.
 
 ### Using @civic/nexus-client
 
@@ -187,7 +187,7 @@ Pass the Civic access token in the `Authorization` header when connecting to Nex
 import { NexusClient } from "@civic/nexus-client";
 
 const client = new NexusClient({
-  url: "https://nexus.civic.com/mcp",
+  url: "https://app.civic.com/mcp",
   auth: {
     token: civicAccessToken,
   },
@@ -202,7 +202,7 @@ const tools = await client.getTools(adapter);
 ### Using Raw HTTP (MCP over Streamable HTTP)
 
 ```
-POST https://nexus.civic.com/mcp
+POST https://app.civic.com/mcp
 Content-Type: application/json
 Authorization: Bearer <civic-access-token>
 x-civic-profile: default
@@ -210,28 +210,28 @@ x-civic-profile: default
 
 ## How User Mapping Works
 
-The token exchange creates a mapping between your user identities and Nexus:
+The token exchange creates a mapping between your user identities and Civic:
 
 ```
-Your Application                          Civic Nexus
+Your Application                          Civic
 ┌──────────────────┐                     ┌──────────────────┐
-│ sub: "user-123"  │  ── exchange ──>    │ Nexus user tied   │
+│ sub: "user-123"  │  ── exchange ──>    │ Civic user tied   │
 │ iss: "your-app"  │                     │ to your org +     │
 │ email: "a@b.com" │                     │ "user-123" sub    │
 └──────────────────┘                     └──────────────────┘
 ```
 
-- **`sub` claim** — the primary key. Nexus uses the combination of your application's issuer and the `sub` value to uniquely identify a user within your organization.
-- **Same `sub`, same user** — if two requests carry JWTs with the same `sub` from the same issuer, Nexus treats them as the same user. Any OAuth grants, preferences, or data the user has authorized will carry over.
+- **`sub` claim** — the primary key. Civic uses the combination of your application's issuer and the `sub` value to uniquely identify a user within your organization.
+- **Same `sub`, same user** — if two requests carry JWTs with the same `sub` from the same issuer, Civic treats them as the same user. Any OAuth grants, preferences, or data the user has authorized will carry over.
 - **Different `sub`, different user** — each unique `sub` is an isolated identity with its own authorizations and data.
-- **`x-civic-profile` header** — scopes the user to a specific profile within your Nexus organization. Use `default` unless you have multiple profiles configured.
+- **`x-civic-profile` header** — scopes the user to a specific profile within your Civic organization. Use `default` unless you have multiple profiles configured.
 
 ## Token Lifecycle & Caching
 
 - Civic access tokens have a limited lifetime (returned in the `expires_in` field, typically 24 hours).
 - Cache the access token on your server and reuse it for the same user until it expires.
 - When the token expires, perform a new token exchange with a fresh JWT.
-- Do **not** send expired or invalid tokens to Nexus — you will receive a `401 Unauthorized`.
+- Do **not** send expired or invalid tokens to Civic — you will receive a `401 Unauthorized`.
 
 ## Security Considerations
 
@@ -249,6 +249,6 @@ Your Application                          Civic Nexus
 | Grant type | `urn:ietf:params:oauth:grant-type:token-exchange` |
 | JWT algorithm | `RS256` |
 | JWT audience | `civic-mcp` |
-| Nexus MCP endpoint | `https://nexus.civic.com/mcp` |
+| Civic MCP endpoint | `https://app.civic.com/mcp` |
 | Profile header | `x-civic-profile: default` |
 | RFC reference | [RFC 8693 — OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693) |
