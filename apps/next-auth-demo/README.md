@@ -57,7 +57,8 @@ pnpm install
 2. Generate RSA keys for JWT signing:
 
 ```bash
-pnpm tsx scripts/generate-keys.ts
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
+openssl pkey -in private.pem -pubout -out public.pem
 ```
 
 3. Copy `.env.example` to `.env` and fill in your values:
@@ -72,53 +73,30 @@ cp .env.example .env
 pnpm dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) and log in with:
+5. Open [http://localhost:3020](http://localhost:3020) and log in with:
    - Email: `demo@example.com`
    - Password: `demo123`
 
 ## Implementation Details
 
-### Token Exchange
-
-The token exchange follows [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) to swap your app's JWT for a Civic access token. See `app/lib/token-exchange.ts`:
-
-```typescript
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
-
-// Exchange your app's JWT for a Civic access token
-const civicToken = await exchangeTokenForCivic(sessionToken);
-// Returns: { accessToken, tokenType, expiresIn, expiresAt }
-```
-
-The exchange makes a POST request to Civic Auth's `/token` endpoint:
-
-```
-POST https://auth.civic.com/oauth/token
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic <base64(clientId:clientSecret)>
-
-grant_type=urn:ietf:params:oauth:grant-type:token-exchange
-&subject_token=<your-jwt>
-&scope=openid profile email
-```
-
 ### Using @civic/mcp-client
 
-This demo uses `@civic/mcp-client` to connect to Civic MCP. The client handles the MCP protocol and provides tools that can be used with AI SDKs.
+This demo uses `@civic/mcp-client` to connect to Civic MCP. The client handles token exchange (RFC 8693) and the MCP protocol automatically, providing tools that can be used with AI SDKs.
 
 ```typescript
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 
-// Create a Civic client with the exchanged Civic token
+// Create a client with built-in token exchange
 const client = new CivicMcpClient({
-  url: process.env.MCP_SERVER_URL,
   auth: {
-    token: civicToken.accessToken,
+    tokenExchange: {
+      clientId: process.env.CIVIC_CLIENT_ID,
+      clientSecret: process.env.CIVIC_CLIENT_SECRET,
+      subjectToken: getSessionToken, // async function returning your JWT
+    },
   },
-  headers: {
-    "x-civic-profile": "default",  // Required for federated auth
-  },
+  civicProfile: process.env.CIVIC_PROFILE_ID,
 });
 
 // Get tools adapted for Vercel AI SDK
@@ -135,11 +113,9 @@ const result = await generateText({
 await client.close();
 ```
 
-The `x-civic-profile` header is required for federated authentication to lock users to a specific profile within your Civic organization.
-
 ### Client Caching
 
-The demo caches `CivicMcpClient` instances per user to avoid repeated token exchanges. Clients are automatically refreshed when the Civic token expires and cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
+The demo caches `CivicMcpClient` instances per user to avoid repeated connections. Clients are automatically cleaned up after 60 minutes of inactivity. See `app/lib/ai/mcp.ts` for the full implementation.
 
 ## Environment Variables
 
@@ -161,7 +137,7 @@ Your JWT must include these claims:
 | Claim | Required | Description |
 |-------|----------|-------------|
 | `iss` | Yes | Issuer URL (must match Civic Auth config) |
-| `aud` | Yes | Audience (must be `civic-mcp`) |
+| `aud` | Yes | Audience (must match Civic Integration config) |
 | `sub` | Yes | Subject (user ID) |
 | `iat` | Yes | Issued at timestamp |
 | `exp` | Yes | Expiration timestamp |
@@ -175,11 +151,9 @@ Your JWT must include these claims:
 | `auth.ts` | Auth.js configuration with custom JWT signing |
 | `app/lib/auth/jwt.ts` | JWT encode/decode with RS256 |
 | `app/lib/auth/keys.ts` | RSA key management |
-| `app/lib/token-exchange.ts` | Civic token exchange service |
-| `app/lib/ai/mcp.ts` | MCP client setup |
+| `app/lib/ai/mcp.ts` | MCP client setup with built-in token exchange |
 | `app/api/keys/.well-known/jwks.json/route.ts` | JWKS endpoint |
 | `app/api/keys/public/route.ts` | PEM public key endpoint |
-| `scripts/generate-keys.ts` | RSA key pair generator |
 
 ## Troubleshooting
 

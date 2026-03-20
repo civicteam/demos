@@ -18,7 +18,7 @@ This app uses `@civic/auth` as the identity provider. Unlike federated auth flow
 1. Install dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. Create `.env` from the example:
@@ -29,13 +29,12 @@ This app uses `@civic/auth` as the identity provider. Unlike federated auth flow
 
 3. Fill in your environment variables:
    - `CIVIC_CLIENT_ID` -- your Civic Auth client ID
-   - `MCP_SERVER_URL` -- Civic MCP endpoint (default: `https://app.civic.com/hub/mcp`)
    - `ANTHROPIC_API_KEY` -- your Anthropic API key
 
 4. Run the dev server:
 
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
    The app runs on **port 3024**.
