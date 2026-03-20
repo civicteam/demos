@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+civic-mcp-client>=0.1.0
+

@@ -20,6 +20,7 @@ pnpm install
 | [next-auth-demo-intercept](./apps/next-auth-demo-intercept) | Like next-auth-demo but with civic:rest-auth tool wrapping for transparent auth interception |
 | [federated-auth-demo-webmcp](./apps/federated-auth-demo-webmcp) | Like federated-auth-demo but uses the MCP SDK directly (WebMCP) instead of a higher-level client |
 | [better-auth-demo](./apps/better-auth-demo) | Better Auth with an OIDC provider plugin for JWT generation and Civic token exchange; runs over local HTTPS |
+| [civic-auth-demo-python-backend](./apps/civic-auth-demo-python-backend) | Next.js frontend + FastAPI Python backend demonstrating [`civic-mcp-client`](https://pypi.org/project/civic-mcp-client/) by forwarding the Civic access token server-side |
 
 ## Projects
 
@@ -46,3 +47,7 @@ Similar to federated-auth-demo but connects to Civic MCP using the `@modelcontex
 ### [better-auth-demo](./apps/better-auth-demo)
 
 A Next.js application using [Better Auth](https://www.better-auth.com/) with an OIDC provider plugin that generates RS256-signed JWTs. These are exchanged for Civic access tokens via RFC 8693. Runs over local HTTPS (self-signed certificate) on port 3023.
+
+### [civic-auth-demo-python-backend](./apps/civic-auth-demo-python-backend)
+
+A Next.js frontend with a small FastAPI Python backend that demonstrates [`civic-mcp-client`](https://pypi.org/project/civic-mcp-client/) by forwarding your authenticated Civic access token server-side. After login, users land directly on `/python-backend` to list available MCP tools and call a tool via the Python service.
