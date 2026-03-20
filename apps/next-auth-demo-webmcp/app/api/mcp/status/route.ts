@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
+import { CivicMcpClient } from "@civic/mcp-client";
 
 export interface McpStatusResponse {
   authenticated: boolean;
@@ -30,15 +30,27 @@ export async function GET(): Promise<Response> {
     status.authenticated = !!session?.user;
     if (!status.authenticated) return Response.json(status);
 
-    const sessionToken = await getSessionToken();
-    if (!sessionToken) {
-      status.tokenExchange = { status: "failed", error: "No session token" };
+    const clientId = process.env.CIVIC_CLIENT_ID;
+    const clientSecret = process.env.CIVIC_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      status.tokenExchange = { status: "failed", error: "CIVIC_CLIENT_ID and CIVIC_CLIENT_SECRET are required" };
       return Response.json(status);
     }
 
     try {
-      const civicToken = await exchangeTokenForCivic(sessionToken);
-      status.tokenExchange = { status: "success", accessToken: civicToken.accessToken };
+      const client = new CivicMcpClient({
+        auth: {
+          tokenExchange: {
+            clientId,
+            clientSecret,
+            subjectToken: getSessionToken as () => Promise<string>,
+          },
+        },
+        civicProfile: process.env.CIVIC_PROFILE_ID,
+      });
+
+      const accessToken = await client.getConfig().resolveToken();
+      status.tokenExchange = { status: "success", accessToken };
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
       status.tokenExchange = { status: "failed", error: msg };

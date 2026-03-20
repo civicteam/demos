@@ -607,6 +607,9 @@ importers:
       '@auth/core':
         specifier: 0.37.2
         version: 0.37.2
+      '@civic/mcp-client':
+        specifier: 0.1.0
+        version: 0.1.0(@ai-sdk/mcp@1.0.25(zod@4.3.6))(ai@6.0.116(zod@4.3.6))(zod@4.3.6)
       '@radix-ui/react-slot':
         specifier: ^1.1.2
         version: 1.2.4(@types/react@19.2.8)(react@19.2.3)
