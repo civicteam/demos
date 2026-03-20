@@ -27,8 +27,6 @@ def extract_bearer_token(authorization: Optional[str]) -> str:
 def get_client(token: str) -> CivicMCPClient:
     # Civic MCP Hub endpoint is under `/hub/mcp`.
     mcp_url = os.getenv("MCP_SERVER_URL", "https://app.civic.com/hub/mcp")
-    if mcp_url == "https://app.civic.com/mcp":
-        mcp_url = "https://app.civic.com/hub/mcp"
     civic_profile_id = os.getenv("CIVIC_PROFILE_ID")
 
     kwargs: Dict[str, Any] = {

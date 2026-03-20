@@ -37,7 +37,7 @@ export async function GET(): Promise<Response> {
       status.tokenExchange = { status: "success", accessToken: client.getAccessToken() };
 
       try {
-        const mcpResponse = await fetch("https://app.civic.com/mcp", {
+        const mcpResponse = await fetch("https://app.civic.com/hub/mcp", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });
