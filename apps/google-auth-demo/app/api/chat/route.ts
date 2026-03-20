@@ -3,6 +3,8 @@ import { stepCountIs, streamText } from "ai";
 
 import { models } from "@/lib/ai/llm";
 import { getTools } from "@/lib/ai/mcp";
+import { handleCacheInvalidationForStep } from "@/lib/ai/cache-invalidation";
+import { auth } from "@/auth";
 
 function convertToModelMessages(messages: UIMessage[]): ModelMessage[] {
   return messages.map((msg) => {
@@ -31,6 +33,8 @@ export async function POST(req: Request) {
   if (!model) throw new Error(`Invalid provider: ${provider}`);
   if (!latestMessage) throw new Error("No message provided");
 
+  const session = await auth();
+  const user = session?.user?.id ? { id: session.user.id } : null;
   const tools = await getTools();
 
   try {
@@ -42,6 +46,9 @@ export async function POST(req: Request) {
         "When answering a question, make sure to respond to the user after at most 5 tool calls, " +
         "let them know what you know so far, and what you plan to do next, and wait for further instructions.",
       tools,
+      onStepFinish: (stepResult) => {
+        handleCacheInvalidationForStep(stepResult, user);
+      },
       stopWhen: stepCountIs(10),
       onError: ({ error }) => {
         console.error("streamText error:", error);
