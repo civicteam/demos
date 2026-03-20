@@ -1,12 +1,14 @@
-# Federated Auth Demo
+# Next Auth Demo (Intercept)
 
-This demo application shows how to integrate a custom authentication system with Civic using OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
+Like the Next Auth Demo but with transparent OAuth2 auth interception for tools. Uses Auth.js (NextAuth v5) with custom JWT signing and Civic MCP integration, adding `civic:rest-auth` capability to automatically handle OAuth2 authorization flows when tools require user consent.
 
 ## How It Works
 
+The base authentication and token exchange flow is identical to the Next Auth Demo:
+
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic   │
+│   Your App      │     │   Your IdP      │     │   Civic Auth    │     │   Civic         │
 │   (Auth.js)     │     │   (JWT Issuer)  │     │   (Exchange)    │     │   (MCP Hub)     │
 └────────┬────────┘     └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
          │                       │                       │                       │
@@ -30,6 +32,76 @@ This demo application shows how to integrate a custom authentication system with
          │  6. MCP Tools Response                                                │
          │<──────────────────────────────────────────────────────────────────────│
 ```
+
+## Auth Interception (`civic:rest-auth`)
+
+Some MCP tools connect to third-party services that require their own OAuth2 authorization (e.g. connecting a user's Google Drive or GitHub account). Normally the LLM would receive a raw auth URL and have to ask the user to visit it. This demo intercepts that flow transparently.
+
+### How it works
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────────┐
+│  LLM     │     │  Server  │     │  MCP Hub │     │  3rd-Party   │
+│          │     │ (wrapper) │     │          │     │  OAuth       │
+└────┬─────┘     └────┬─────┘     └────┬─────┘     └──────┬───────┘
+     │                │                │                   │
+     │  call tool     │                │                   │
+     │───────────────>│                │                   │
+     │                │  call tool     │                   │
+     │                │───────────────>│                   │
+     │                │                │                   │
+     │                │  auth required │                   │
+     │                │  (pollingEndpoint, continueJobId)  │
+     │                │<───────────────│                   │
+     │                │                │                   │
+     │                │  GET pollingEndpoint → authUrl     │
+     │                │───────────────────────────────────>│
+     │                │                │                   │
+     │                │  store pending auth for client     │
+     │                │──┐                                 │
+     │                │<─┘                                 │
+     │                │                │                   │
+     │                │  poll HEAD (2s intervals, 15s max) │
+     │                │───────────────────────────────────>│
+     │                │                202 (pending)       │
+     │                │<──────────────────────────────────│
+     │                │                │                   │
+     │    Meanwhile: client polls /api/civic-auth/pending  │
+     │    and opens auth popup for user                    │
+     │                │                │                   │
+     │                │  poll HEAD     │                   │
+     │                │───────────────────────────────────>│
+     │                │                200 (approved!)     │
+     │                │<──────────────────────────────────│
+     │                │                │                   │
+     │                │  continue_job  │                   │
+     │                │───────────────>│                   │
+     │                │  final result  │                   │
+     │                │<───────────────│                   │
+     │                │                │                   │
+     │  tool result   │                │                   │
+     │  (transparent) │                │                   │
+     │<───────────────│                │                   │
+```
+
+1. The client advertises `civic:rest-auth` capability when connecting to MCP Hub
+2. When a tool requires third-party OAuth, the Hub returns `auth_polling_endpoint` and `continue_job_id` instead of a result
+3. The server-side wrapper (`wrapToolsWithCivicAuth`) intercepts this response before the LLM sees it
+4. It fetches the auth URL, stores it as pending, and polls for user approval (up to 15s)
+5. The client polls `/api/civic-auth/pending` and opens a popup for the user to authorize
+6. Once approved, the wrapper calls `continue_job` to resume the operation
+7. The final result is returned to the LLM transparently — it never sees the auth flow
+
+If the user doesn't authorize within 15 seconds, the wrapper falls back to returning the auth URL to the LLM so it can ask the user directly.
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `app/lib/ai/civic-rest-auth.ts` | Auth interception logic — detects auth responses, polls, calls `continue_job` |
+| `app/lib/ai/mcp.ts` | MCP client with `civic:rest-auth` capability enabled |
+| `app/api/civic-auth/pending/route.ts` | Client-facing endpoint to check for pending auth popups |
+| `app/api/chat/route.ts` | Chat route that wraps tools with `wrapToolsWithCivicAuth` |
 
 ## Setup Guide
 
@@ -87,7 +159,7 @@ This demo uses `@civic/mcp-client` to connect to Civic MCP. The client handles t
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
 
-// Create a client with built-in token exchange
+// Create a client with built-in token exchange and auth interception
 const client = new CivicMcpClient({
   auth: {
     tokenExchange: {
@@ -97,6 +169,11 @@ const client = new CivicMcpClient({
     },
   },
   civicProfile: process.env.CIVIC_PROFILE_ID,
+  capabilities: {
+    experimental: {
+      "civic:rest-auth": { version: "1.0" },
+    },
+  },
 });
 
 // Get tools adapted for Vercel AI SDK
@@ -128,7 +205,6 @@ The demo caches `CivicMcpClient` instances per user to avoid repeated connection
 | `CIVIC_CLIENT_ID` | Your Civic client ID (from **Settings > Integration** at [app.civic.com](https://app.civic.com)) |
 | `CIVIC_CLIENT_SECRET` | Your Civic client secret |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
-| `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
 
 ## JWT Requirements
 
@@ -169,3 +245,7 @@ Your JWT must include these claims:
 - Check your Integration setup at [app.civic.com](https://app.civic.com) → **Settings > Integration**
 - Ensure public access is enabled or the user has been invited
 - Verify the access token is being passed correctly
+
+## Port
+
+This app runs on port **3021**.

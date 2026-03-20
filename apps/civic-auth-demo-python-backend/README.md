@@ -1,10 +1,10 @@
 # Civic Auth with Python Backend Demo
 
-Direct Civic Auth integration with Civic MCP -- the simplest path to connecting an AI assistant to Civic tools.
+Extends the [Civic Auth Demo](../civic-auth-demo) with a FastAPI Python backend that demonstrates [`civic-mcp-client`](https://pypi.org/project/civic-mcp-client/) -- the Python SDK for Civic MCP.
 
 ## How it works
 
-This app uses `@civic/auth` as the identity provider. Unlike federated auth flows, **no token exchange is needed** -- Civic Auth tokens are directly valid for the Civic MCP endpoint.
+The Next.js frontend uses `@civic/auth` as the identity provider (no token exchange needed). The authenticated Civic access token is forwarded server-side to a Python FastAPI backend, which uses `civic-mcp-client` to list and call MCP tools.
 
 ## Prerequisites
 
