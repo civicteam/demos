@@ -69,7 +69,7 @@ Better Auth generates its RS256 keys on first run. To get the public key for Civ
    CIVIC_CLIENT_ID=<your Civic Auth client ID>
    CIVIC_CLIENT_SECRET=<your Civic Auth client secret>
 
-   MCP_SERVER_URL=https://app.civic.com/mcp
+   MCP_SERVER_URL=https://app.civic.com/hub/mcp
    ANTHROPIC_API_KEY=<your Anthropic API key>
    ```
 
