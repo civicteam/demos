@@ -1,6 +1,6 @@
-# Federated Auth Demo
+# Next Auth Demo
 
-This demo application shows how to integrate a custom authentication system with Civic using OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)). It allows you to use your own identity provider (IdP) while still accessing Civic MCP tools and services.
+Auth.js (NextAuth v5) with custom JWT signing and Civic MCP integration. Uses OAuth 2.0 Token Exchange ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693)) to exchange your app's JWTs for Civic access tokens, enabling AI chat with Civic MCP tools.
 
 ## How It Works
 
@@ -128,7 +128,6 @@ The demo caches `CivicMcpClient` instances per user to avoid repeated connection
 | `CIVIC_CLIENT_ID` | Your Civic client ID (from **Settings > Integration** at [app.civic.com](https://app.civic.com)) |
 | `CIVIC_CLIENT_SECRET` | Your Civic client secret |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
-| `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
 
 ## JWT Requirements
 
@@ -169,3 +168,7 @@ Your JWT must include these claims:
 - Check your Integration setup at [app.civic.com](https://app.civic.com) → **Settings > Integration**
 - Ensure public access is enabled or the user has been invited
 - Verify the access token is being passed correctly
+
+## Port
+
+This app runs on port **3020**.
