@@ -1,53 +1,38 @@
 import type { ToolSet } from "ai";
 import { CivicMcpClient } from "@civic/mcp-client";
 import { vercelAIAdapter } from "@civic/mcp-client/adapters/vercel-ai";
-import { exchangeTokenForCivic } from "@/lib/token-exchange";
+import { auth } from "@/lib/auth/server";
 import { headers } from "next/headers";
 
 interface CachedClient {
   client: CivicMcpClient;
   lastUsed: number;
-  civicTokenExpiry: Date;
 }
 
 const clientCache = new Map<string, CachedClient>();
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
 
 /**
- * Get the Better Auth session by calling the /api/auth/get-session endpoint internally.
+ * Get the Better Auth session using the server-side API.
  */
-async function getBetterAuthSession(): Promise<{ user: { id: string; email: string; name: string } } | null> {
+export async function getBetterAuthSession(): Promise<{ user: { id: string; email: string; name: string } } | null> {
   try {
     const headersList = await headers();
-    const cookie = headersList.get("cookie") || "";
-
-    const res = await fetch(`${process.env.BETTER_AUTH_URL || "http://localhost:3023"}/api/auth/get-session`, {
-      headers: { cookie },
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.user ? { user: data.user } : null;
+    const session = await auth.api.getSession({ headers: headersList });
+    return session?.user ? { user: session.user } : null;
   } catch {
     return null;
   }
 }
 
 /**
- * Get a JWT token from Better Auth's token endpoint.
+ * Get a JWT token from Better Auth's token endpoint using the server-side API.
  */
 async function getBetterAuthToken(): Promise<string | null> {
   try {
     const headersList = await headers();
-    const cookie = headersList.get("cookie") || "";
-
-    const res = await fetch(`${process.env.BETTER_AUTH_URL || "http://localhost:3023"}/api/auth/token`, {
-      headers: { cookie },
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.token || null;
+    const tokenResponse = await auth.api.getToken({ headers: headersList });
+    return tokenResponse?.token || null;
   } catch {
     return null;
   }
@@ -61,33 +46,30 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
     const userId = session.user.id;
 
     const cachedEntry = clientCache.get(userId);
-    if (cachedEntry && cachedEntry.civicTokenExpiry > new Date()) {
+    if (cachedEntry) {
       cachedEntry.lastUsed = Date.now();
       return cachedEntry.client;
     }
 
-    if (cachedEntry) {
-      await closeCivicMcpClient(userId);
+    const clientId = process.env.CIVIC_CLIENT_ID;
+    const clientSecret = process.env.CIVIC_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      console.error("CIVIC_CLIENT_ID and CIVIC_CLIENT_SECRET are required");
+      return null;
     }
 
-    const betterAuthToken = await getBetterAuthToken();
-    if (!betterAuthToken) return null;
-
-    const civicToken = await exchangeTokenForCivic(betterAuthToken);
-
     const client = new CivicMcpClient({
-      url: process.env.MCP_SERVER_URL,
       auth: {
-        token: civicToken.accessToken,
+        tokenExchange: {
+          clientId,
+          clientSecret,
+          subjectToken: getBetterAuthToken as () => Promise<string>,
+        },
       },
+      civicProfile: process.env.CIVIC_PROFILE_ID,
     });
 
-    clientCache.set(userId, {
-      client,
-      lastUsed: Date.now(),
-      civicTokenExpiry: civicToken.expiresAt,
-    });
-
+    clientCache.set(userId, { client, lastUsed: Date.now() });
     return client;
   } catch (error) {
     console.error("Error getting Civic client:", error);

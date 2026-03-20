@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 
 export function LoginForm() {
   const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("demo123");
+  const [password, setPassword] = useState("demo12345");
   const [name, setName] = useState("Demo User");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,7 +95,7 @@ export function LoginForm() {
         </button>
       </p>
       <p className="text-sm text-gray-500 text-center">
-        Default credentials: demo@example.com / demo123
+        Default credentials: demo@example.com / demo12345
       </p>
     </form>
   );
