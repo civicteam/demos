@@ -33,15 +33,8 @@ export async function getCivicMcpClient(): Promise<CivicMcpClient | null> {
     const tokens = await getTokens();
     const accessToken = tokens?.accessToken || "";
 
-    const mcpUrl = (() => {
-      const configured = process.env.MCP_SERVER_URL;
-      // The MCP Hub endpoint is under `/hub/mcp`. Older configs may still point at `/mcp`.
-      if (configured === "https://app.civic.com/mcp") return "https://app.civic.com/hub/mcp";
-      return configured;
-    })();
-
     const client = new CivicMcpClient({
-      url: mcpUrl,
+      url: process.env.MCP_SERVER_URL,
       auth: {
         token: accessToken,
       },
