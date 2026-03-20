@@ -33,45 +33,20 @@ This demo application shows how to integrate a custom authentication system with
 
 ## Setup Guide
 
-### Step 1: Create a Civic Auth Application
+### Step 1: Configure Integration in Civic
 
-1. Go to [auth.civic.com](https://auth.civic.com) and sign up or log in
-2. Create a new application to get your **Client ID** and **Client Secret**
-3. See the [Civic Auth documentation](https://docs.civic.com/auth) for detailed instructions
+1. Go to [app.civic.com](https://app.civic.com) and sign up or log in
+2. Navigate to **Settings > Integration** to set up your app connection
+3. Follow the guided setup (see [Integration docs](https://docs.civic.com/civic/developers/integration/apps)):
+   - **Connect authentication** — create a new auth connection or link an existing Civic Auth app
+   - **Configure auth provider** — select **Third-party provider > Custom** and configure:
+     - **Issuer URL** — must match the `ISSUER` env var (used in `app/lib/auth/jwt.ts`)
+     - **JWKS URL** or **Public Key** — either your app's JWKS endpoint or paste the PEM directly
+     - **Audience** — must match the `AUDIENCE` env var
+   - **Configure access** — enable public access so new users can join automatically
+4. Copy your **CIVIC_CLIENT_ID** and **CIVIC_CLIENT_SECRET** from the Integration page
 
-### Step 2: Configure Token Exchange in Civic Auth
-
-In your Civic Auth application settings, configure the Token Exchange feature:
-
-1. Navigate to **Setup > Token Exchange > Add Provider**
-2. Select **Custom** provider and configure:
-
-| Field | Value | Notes |
-|-------|-------|-------|
-| **Issuer URL** | `https://localhost:3000` | Must match the `ISSUER` constant in `app/lib/auth/jwt.ts` |
-| **Audience** | `civic-mcp` | Must match the `AUDIENCE` constant in `app/lib/auth/jwt.ts` |
-| **Algorithm** | `RS256` | |
-| **JWKS URL** | `http://localhost:3023/api/keys/.well-known/jwks.json` | Exposed by the app (see `app/api/keys/.well-known/jwks.json/route.ts`) |
-
-Alternatively, instead of the JWKS URL, you can paste your **public key PEM** directly (the value of `JWT_PUBLIC_KEY` from your `.env`).
-
-> **Note**: The issuer and audience values are hardcoded in `app/lib/auth/jwt.ts`. If you change them, you must also update the Civic Auth token exchange configuration to match.
-
-### Step 3: Create a Civic Organization
-
-1. Go to [app.civic.com](https://app.civic.com) and log in
-2. Create a new organization dedicated to your application
-3. Note the **Account ID** of your new organization (you'll need this for the next step)
-
-### Step 4: Link Your Civic Auth Account to Civic
-
-Contact a Civic representative with:
-- Your **Civic Auth Client ID**
-- Your **Civic Organization Account ID**
-
-They will link your Civic Auth application to your Civic organization and configure the necessary internal settings.
-
-### Step 5: Run the Demo
+### Step 2: Run the Demo
 
 1. Clone this repository and install dependencies:
 
@@ -174,10 +149,8 @@ The demo caches `CivicMcpClient` instances per user to avoid repeated token exch
 | `NEXTAUTH_SECRET` | Secret for encrypting cookies (generate with `openssl rand -base64 32`) |
 | `JWT_PUBLIC_KEY` | RSA public key for JWT verification |
 | `JWT_PRIVATE_KEY` | RSA private key for JWT signing |
-| `CIVIC_AUTH_URL` | Civic Auth endpoint (default: `https://auth.civic.com/oauth`) |
-| `CIVIC_CLIENT_ID` | Your Civic Auth client ID |
-| `CIVIC_CLIENT_SECRET` | Your Civic Auth client secret |
-| `MCP_SERVER_URL` | Civic MCP endpoint (default: `https://app.civic.com/mcp`) |
+| `CIVIC_CLIENT_ID` | Your Civic client ID (from **Settings > Integration** at [app.civic.com](https://app.civic.com)) |
+| `CIVIC_CLIENT_SECRET` | Your Civic client secret |
 | `ANTHROPIC_API_KEY` | API key for Anthropic (Claude) |
 | `OPENAI_API_KEY` | API key for OpenAI (alternative LLM) |
 
@@ -212,13 +185,13 @@ Your JWT must include these claims:
 
 ### Token Exchange Fails with `invalid_grant`
 
-- Verify your issuer URL matches exactly what's configured in Civic Auth
-- Check that your JWKS endpoint is publicly accessible
+- Verify your issuer URL matches exactly what's configured in your Civic Integration settings at [app.civic.com](https://app.civic.com)
+- Check that your JWKS endpoint is publicly accessible (or use a static public key)
 - Ensure the JWT is signed with the correct private key
-- Verify the `aud` claim is set to `civic-mcp`
+- Verify the `aud` claim matches what's configured in your auth provider settings
 
 ### MCP Connection Fails with 401
 
-- Ensure your Civic organization is linked to your Civic Auth client
-- Check that your organization has the required MCP servers installed
+- Check your Integration setup at [app.civic.com](https://app.civic.com) → **Settings > Integration**
+- Ensure public access is enabled or the user has been invited
 - Verify the access token is being passed correctly

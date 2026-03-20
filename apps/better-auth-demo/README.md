@@ -15,8 +15,7 @@ A Next.js app demonstrating [Better Auth](https://www.better-auth.com/) with JWT
 ## Prerequisites
 
 - Node.js 18+
-- A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com))
-- A Civic organization linked to your Civic Auth app
+- A **Civic account** at [app.civic.com](https://app.civic.com) with Integration configured (see [Integration docs](https://docs.civic.com/civic/developers/integration/apps))
 - An **Anthropic API key**
 
 ## Setup
@@ -38,22 +37,17 @@ Better Auth generates its RS256 keys on first run. To get the public key for Civ
 1. Visit `https://localhost:3023/api/keys/public` in your browser
 2. Copy the entire PEM key (including the `-----BEGIN PUBLIC KEY-----` and `-----END PUBLIC KEY-----` lines)
 
-### Step 3: Configure Token Exchange in Civic Auth
+### Step 3: Configure Integration in Civic
 
-In your Civic Auth application settings:
-
-1. Navigate to **Setup > Token Exchange > Add Provider**
-2. Select **Custom** provider
-3. Fill in the following values:
-
-| Field | Value | Notes |
-|-------|-------|-------|
-| **Issuer URL** | `https://localhost:3023` | Must match `BETTER_AUTH_URL` |
-| **Verification method** | Static public key | Civic Auth can't reach localhost JWKS, so use the PEM from Step 2 |
-| **Public Key** | *(paste PEM from Step 2)* | The RS256 public key exported from Better Auth |
-| **Audience** | `https://localhost:3023` | Better Auth defaults the `aud` claim to the app URL |
-
-4. Click **Save provider**
+1. Go to [app.civic.com](https://app.civic.com) → **Settings > Integration**
+2. Follow the guided setup (see [Integration docs](https://docs.civic.com/civic/developers/integration/apps)):
+   - **Connect authentication** — create a new auth connection or link an existing one
+   - **Configure auth provider** — select **Third-party provider > Custom** and configure:
+     - **Issuer URL** — `https://localhost:3023` (must match `BETTER_AUTH_URL`)
+     - **Public Key** — paste the PEM from Step 2 (Civic can't reach localhost JWKS)
+     - **Audience** — `https://localhost:3023` (Better Auth defaults `aud` to the app URL)
+   - **Configure access** — enable public access so new users can join automatically
+3. Copy your **CIVIC_CLIENT_ID** and **CIVIC_CLIENT_SECRET** from the Integration page
 
 > **Note**: Better Auth's JWT plugin manages key generation and rotation automatically. For production deployments with a public URL, you can use the JWKS URI (`https://your-domain.com/api/auth/jwks`) instead of a static key.
 

@@ -13,8 +13,7 @@ Google OAuth + Civic Auth token exchange demo -- the simplest token exchange flo
 
 - Node.js 18+
 - A **Google Cloud project** with OAuth 2.0 credentials (see Step 1 below)
-- A **Civic Auth app** (from [auth.civic.com](https://auth.civic.com)) with token exchange configured (see Step 2 below)
-- A Civic organization linked to your Civic Auth app
+- A **Civic account** at [app.civic.com](https://app.civic.com) with Integration configured (see Step 2 below)
 - An **Anthropic API key**
 
 ## Setup
@@ -38,21 +37,15 @@ Google OAuth + Civic Auth token exchange demo -- the simplest token exchange flo
    - Click **Create**
 7. Copy the **Client ID** (looks like `123456789-xxxxx.apps.googleusercontent.com`) and **Client Secret**
 
-### Step 2: Configure Token Exchange in Civic Auth
+### Step 2: Configure Integration in Civic
 
-In your Civic Auth application settings:
-
-1. Navigate to **Setup > Token Exchange > Add Provider**
-2. Select the **Google** preset -- this auto-fills the Issuer URL and JWKS URI fields
-3. Fill in the **Audience** field with your Google OAuth Client ID from Step 1
-4. Click **Save provider**
-
-| Field | Value | Notes |
-|-------|-------|-------|
-| **Issuer URL** | `https://accounts.google.com` | Auto-filled by Google preset |
-| **JWKS URI** | `https://www.googleapis.com/oauth2/v3/certs` | Auto-filled by Google preset |
-| **Audience** | Your `GOOGLE_CLIENT_ID` | The Client ID from Step 1 |
-| **Algorithm** | `RS256` | Default |
+1. Go to [app.civic.com](https://app.civic.com) → **Settings > Integration**
+2. Follow the guided setup (see [Integration docs](https://docs.civic.com/civic/developers/integration/apps)):
+   - **Connect authentication** — create a new auth connection or link an existing one
+   - **Configure auth provider** — select **Third-party provider > Google** preset, which auto-fills the Issuer URL and JWKS URI
+   - Set the **Audience** to your Google OAuth Client ID from Step 1
+   - **Configure access** — enable public access so new users can join automatically
+3. Copy your **CIVIC_CLIENT_ID** and **CIVIC_CLIENT_SECRET** from the Integration page
 
 > **Note**: No custom signing or JWKS hosting is needed -- Google's ID tokens are standard RS256 JWTs verified against Google's public JWKS endpoint.
 
