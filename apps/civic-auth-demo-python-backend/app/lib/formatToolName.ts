@@ -12,7 +12,7 @@
  * "civic-manager-manage-server": "Manage tool"
  */
 export const TOOL_LABEL_OVERRIDES: Record<string, string> = {
-  // NEXUS-513 - we want the user to be presented with 'tools' instead of 'servers'.
+  // We want the user to be presented with 'tools' instead of 'servers'.
   "manage-server": "Manage tool",
   "civic-manager-manage-server": "Manage tool",
 };

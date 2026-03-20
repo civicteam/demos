@@ -18,7 +18,7 @@ pnpm install
 | [google-auth-demo](./apps/google-auth-demo) | Google OAuth + Civic token exchange with no custom JWT signing required |
 | [next-auth-demo](./apps/next-auth-demo) | Auth.js with custom RS256 JWT signing and token exchange; supports multiple LLM providers |
 | [next-auth-demo-intercept](./apps/next-auth-demo-intercept) | Like next-auth-demo but with civic:rest-auth tool wrapping for transparent auth interception |
-| [federated-auth-demo-webmcp](./apps/federated-auth-demo-webmcp) | Like federated-auth-demo but uses the MCP SDK directly (WebMCP) instead of a higher-level client |
+| [next-auth-demo-webmcp](./apps/next-auth-demo-webmcp) | Bare-bones WebMCP demo — Auth.js with token exchange, no chat UI (uses third-party WebMCP client) |
 | [better-auth-demo](./apps/better-auth-demo) | Better Auth with an OIDC provider plugin for JWT generation and Civic token exchange; runs over local HTTPS |
 | [civic-auth-demo-python-backend](./apps/civic-auth-demo-python-backend) | Next.js frontend + FastAPI Python backend demonstrating [`civic-mcp-client`](https://pypi.org/project/civic-mcp-client/) by forwarding the Civic access token server-side |
 
@@ -40,9 +40,9 @@ A Next.js application using Auth.js (NextAuth v5) with a custom RS256-signed JWT
 
 Like next-auth-demo but adds civic:rest-auth capability and tool wrapping to transparently intercept and handle OAuth2 authorization flows during tool execution. When a tool requires user authorization, it automatically manages the auth popup flow without the LLM needing to know about it.
 
-### [federated-auth-demo-webmcp](./apps/federated-auth-demo-webmcp)
+### [next-auth-demo-webmcp](./apps/next-auth-demo-webmcp)
 
-Similar to federated-auth-demo but connects to Civic MCP using the `@modelcontextprotocol/sdk` directly (WebMCP) instead of a higher-level MCP client, demonstrating lower-level protocol integration.
+A bare-bones WebMCP demo using Auth.js (NextAuth v5) with federated token exchange. This app handles authentication and token exchange only — a third-party WebMCP-compatible chat client connects to Civic MCP using the exchanged access token.
 
 ### [better-auth-demo](./apps/better-auth-demo)
 
